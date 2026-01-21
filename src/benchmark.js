@@ -1,4 +1,4 @@
-let { solve } = require('./main.js')
+let { solve } = require('./solver.js')
 let { randomInt } = require('./lib.js')
 let words = require('../data/filtered_words.json');
 

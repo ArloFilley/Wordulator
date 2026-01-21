@@ -134,7 +134,3 @@ async function solve(opt) {
 }
 
 module.exports = { solve }
-
-async function main() {
-    await solve({type: "user"})
-}
