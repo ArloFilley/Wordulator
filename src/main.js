@@ -1,13 +1,19 @@
 let words = require('../data/filtered_words.json');
-let global_pf = require('../data/positional_frequencies.json')
-const { ask, calculatePosFreq, count, meetsConditions, score } = require('./lib.js')
+let global_pf = require('../data/positional_frequencies.json');
+const { ask, calculatePosFreq, count, feedback, meetsConditions, score } = require('./lib.js');
 
-let word_numbers = []
+async function solve(opt) {
+    let log;
+    if (opt.type === 'benchmark') {
+        log = () => {};
+    } else {
+        log = console.log;
+    }
 
-async function main() {
     let fw = words;
     let pf = global_pf;
     let guesses = 0;
+    const word_numbers = []
 
     /** @type Map<char, object> */
     let conditions = new Map();
@@ -24,8 +30,7 @@ async function main() {
     while (true) {
         // Strategize & Score
         let best_score = 0;
-        let best_guess = 0;
-        let best_guesses = [];
+        let best_guess = "";
         if (fw.length < 500) {
             pf = calculatePosFreq(fw);
             for (const w of fw) {
@@ -33,7 +38,6 @@ async function main() {
                 if (s > best_score) {
                     best_score = s;
                     best_guess = w;
-                    best_guesses.push(best_guess);
                 }
             }
         } else {
@@ -42,27 +46,33 @@ async function main() {
                 if (s > best_score) {
                     best_score = s;
                     best_guess = w;
-                    best_guesses.push(best_guess);
                 }
             }
         }
         
         // Guess
-        console.log(`Possible Words Left: ${fw.length}\n`);
+        log(`Possible Words Left: ${fw.length}\n`);
         word_numbers.push(fw.length);
         if (fw.length < 50) {
-            console.log(`Best Guess ${guesses+1}: ${best_guess}`);
-            console.log(`Other Guesses ${guesses+1}: ${fw}`);
+            log(`Best Guess ${guesses+1}: ${best_guess}`);
+            log(`Other Guesses ${guesses+1}: ${fw}`);
         } else {
-            console.log(`Best Guess ${guesses+1}: ${best_guesses}`);
+            log(`Best Guess ${guesses+1}: ${best_guess}`);
         }
         guesses += 1;
         
         // Input
-        
-        const green  = await ask("Green Letters. - use '.' for blanks: ");
-        const yellow = await ask("Yellow letters - use '.' for blanks: ");
-        const grey   = await ask("Grey letters   - use '.' for blanks: ");
+        let green, yellow, grey;
+        if (opt.type === 'benchmark') {
+            const fb = feedback(best_guess, opt.answer);
+            green    = fb.green;
+            yellow   = fb.yellow;
+            grey     = fb.grey;
+        } else if (opt.type === 'user') {
+            green    = await ask("Green Letters  - Use '.' for any blanks: ");
+            yellow   = await ask("Yellow Letters - Use '.' for any blanks: ");
+            grey     = await ask("Grey Letters   - Use '.' for any blanks: ");
+        }
 
         // Constraints
         // Set Min Using Green & Yellow Input
@@ -109,18 +119,22 @@ async function main() {
 
         fw = filtered_words;
 
-        if (fw.length === 0) {
-            console.log("ERROR: No Correct Word Could Be Found");
-            process.exit();
+        if (fw.length === 0 || guesses > 6) {
+            log("ERROR: No Correct Word Could Be Found");
+            return { solved: false };
         } 
         
         if (fw.length === 1) {
-            console.log(`Solution: ${filtered_words}`);
-            console.log(`Guess ${guesses} - Yippeee!`);
-            console.log(`Word Numbers By Guess: ${word_numbers}`);
-            process.exit();
+            log(`Solution: ${filtered_words}`);
+            log(`Guess ${guesses} - Yippeee!`);
+            log(`Word Numbers By Guess: ${word_numbers}`);
+            return { solved: true, answer: filtered_words[0], guesses: guesses, word_count: word_numbers };
         }
     }
 }
 
-main();
+module.exports = { solve }
+
+async function main() {
+    await solve({type: "user"})
+}

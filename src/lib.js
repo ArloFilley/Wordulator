@@ -43,27 +43,40 @@ function count(word, character) {
     return count
 }
 
+function feedback(guess, answer) {
+    const green  = ['.', '.', '.', '.', '.'];
+    const yellow = ['.', '.', '.', '.', '.'];
+    const grey   = ['.', '.', '.', '.', '.'];
 
-/**
- * Scores a word based on positional frequencies of letters
- * @param {string} word 
- * @param {number} guesses 
- * @param {Array<[char,number]>} positional_frequencies 
- * @returns 
- */
-function score(word, guesses, positional_frequencies) {
-    let score = 0;
-    const seen = new Set();
-    for (const i in word) {
-        let c = word[i];
-        if (!seen.has(c)) {
-            score += positional_frequencies[i][c];
-            seen.add(c);
+    const counts = {};
+
+    // Greens
+    for (let i = 0; i < 5; i++) {
+        if (guess[i] === answer[i]) {
+            green[i] = guess[i];
         } else {
-            score += positional_frequencies[i][c] / (6 - guesses);
+            counts[answer[i]] = (counts[answer[i]] || 0) + 1;
         }
     }
-    return score;
+
+    // Yellows / Greys
+    for (let i = 0; i < 5; i++) {
+        if (green[i] !== '.') continue;
+
+        const c = guess[i];
+        if (counts[c] > 0) {
+            yellow[i] = c;
+            counts[c]--;
+        } else {
+            grey[i] = c;
+        }
+    }
+
+    return {
+        green: green.join(''),
+        yellow: yellow.join(''),
+        grey: grey.join('')
+    };
 }
 
 /**
@@ -90,5 +103,33 @@ function meetsConditions(word, letter_conditions) {
     return true;
 }
 
+function randomInt(max) {
+  return Math.floor(Math.random() * max);
+}
 
-module.exports = { ask, calculatePosFreq, count, meetsConditions, score }
+/**
+ * Scores a word based on positional frequencies of letters
+ * @param {string} word 
+ * @param {number} guesses 
+ * @param {Array<[char,number]>} positional_frequencies 
+ * @returns 
+ */
+function score(word, guesses, positional_frequencies) {
+    let score = 0;
+    const seen = new Set();
+    for (const i in word) {
+        let c = word[i];
+        if (!seen.has(c)) {
+            score += positional_frequencies[i][c];
+            seen.add(c);
+        } else {
+            score += positional_frequencies[i][c] / (6 - guesses);
+        }
+    }
+    return score;
+}
+
+
+
+
+module.exports = { ask, calculatePosFreq, count, feedback, meetsConditions, randomInt, score }
