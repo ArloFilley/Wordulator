@@ -1,9 +1,9 @@
 
 const fs = require('fs');
 
-const { calculatePosFreq, heuristicScore } = require('../lib/heuristic.js');
+const { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore } = require('../lib/heuristic.js');
 const { calculateGuessEntropy }   = require('../lib/entropy.js');
-const { ask, count, feedback, meetsConditions, randomInt } = require('../lib/lib.js');
+const { ask, count, feedback, meetsConditions, normalise, randomInt } = require('../lib/lib.js');
 
 const words = require('../../data/filter/words.json');
 const pos_freq = require('../../data/proc/pos_freq.json');
@@ -39,32 +39,69 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Score
+        const w = weights(1 - fw.length / words.length);
         let best_guess = '!@??*';
         let best_score = -Infinity;
-        if (guesses == 0) {
+        let scores = { ent: [], pfh: [], unh:[] }
+
+        if (fw.length !== words.length) pf = calculatePosFreq(fw);
+
+        if (guesses === 0) {
             let rand_idx = randomInt(100);
             best_guess = first_guesses[rand_idx].word;
-        } else if (fw.length < 2000) {
-            let pf = calculatePosFreq(fw);
+        } else if (fw.length > 200) {
+            pf = calculatePosFreq(fw);
             for (let guess of fw) {
-                const s = calculateGuessEntropy(guess, words, feedback_matrix, word_index) + (heuristicScore(guess, 0, pf) * 0.0002 * guesses);
+                scores.ent.push(calculateGuessEntropy(guess, fw, feedback_matrix, word_index));
+                scores.pfh.push(pfHeuristicScore(guess, guesses, pf, fw.length));
+                scores.unh.push(uniquenessHeuristicScore(guess));
+            }
 
-                if (s > best_score) {
-                    best_score = s
-                    best_guess = guess
+            log(scores.pfh);
+
+            scores.ent = normalise(scores.ent);
+            scores.pfh = normalise(scores.pfh);
+            scores.unh = normalise(scores.unh);
+
+            log(scores.pfh);
+
+            for (let i=0; i<words.length; i++) {
+                let score  = scores.ent[i] * w.ent;
+                    score += scores.pfh[i] * w.pfh;
+                    score += scores.unh[i] * w.unh;
+
+                if (score > best_score) {
+                    best_score = score;
+                    best_guess = words[i];
                 }
             }
         } else {
+            pf = calculatePosFreq(fw);
             for (let guess of words) {
-                let s = calculateGuessEntropy(guess, fw, feedback_matrix, word_index) + (heuristicScore(guess, guesses, pf) * (0.0001 * guesses));
+                scores.ent.push(calculateGuessEntropy(guess, fw, feedback_matrix, word_index));
+                scores.pfh.push(pfHeuristicScore(guess, guesses, pf, fw.length));
+                scores.unh.push(uniquenessHeuristicScore(guess));
+            }
+            log(scores.pfh);
 
-                if (s > best_score) {
-                    best_score = s
-                    best_guess = guess
+            scores.ent = normalise(scores.ent);
+            scores.pfh = normalise(scores.pfh);
+            scores.unh = normalise(scores.unh);
+
+            log(scores.pfh);
+
+            for (let i=0; i<fw.length; i++) {
+                let score  = scores.ent[i] * w.ent;
+                    score += scores.pfh[i] * w.pfh;
+                    score += scores.unh[i] * w.unh;
+
+                if (score > best_score) {
+                    best_score = score;
+                    best_guess = fw[i];
                 }
             }
         }
-        
+
         // Guess
         log(`Possible Words Left: ${fw.length}\n`);
         word_numbers.push(fw.length);
@@ -146,6 +183,15 @@ async function solve(opt) {
             return { solved: true, answer: filtered_words[0], guesses: guesses, word_count: word_numbers };
         }
     }
+}
+
+function weights (progress) {
+    let p = progress * 10
+    return {
+        ent: 10 / (1.2**p),
+        pfh: 0.6 * p,
+        unh: 3 * Math.log(p) 
+    };
 }
 
 module.exports = { solve }

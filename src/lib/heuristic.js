@@ -21,21 +21,39 @@ function calculatePosFreq(words) {
  * @param {string} word 
  * @param {number} guesses 
  * @param {Array<[char,number]>} positional_frequencies 
- * @returns 
+ * @returns {number}
 */
-function heuristicScore(word, guesses, positional_frequencies) {
+function pfHeuristicScore(word, guesses, positional_frequencies, list_length) {
+    let score = 0;
+    const seen = new Set();
+    for (let i=0; i<word.length; i++) {
+        let c = word[i];
+        if (!seen.has(c)) {
+            score += positional_frequencies[i][c] ?? 0;
+            seen.add(c);
+        } else {
+            score += positional_frequencies[i][c] ?? 0;
+        }
+    }
+
+    return score / (list_length / 5);
+}
+
+/**
+ * Scores a word between 1-word.length based on how many unique letters it contains
+ * @param {string} word 
+ * @returns {number}
+*/
+function uniquenessHeuristicScore(word) {
     let score = 0;
     const seen = new Set();
     for (const i in word) {
         let c = word[i];
         if (!seen.has(c)) {
-            score += positional_frequencies[i][c];
-            seen.add(c);
-        } else {
-            score += positional_frequencies[i][c] / (6 - guesses);
+            score += 1;
         }
     }
     return score;
 }
 
-module.exports = { calculatePosFreq, heuristicScore }
+module.exports = { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore }

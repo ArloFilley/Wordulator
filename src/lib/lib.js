@@ -86,8 +86,27 @@ function meetsConditions(word, letter_conditions) {
     return true;
 }
 
+/**
+ * Normalises an array of data
+ * @param {int[]} arr 
+ * @returns {int[]}
+ */
+function normalise(arr) {
+    let max = -Infinity;
+    let min =  Infinity;
+
+    for (const e of arr) {
+        max = Math.max(e, max);
+        min = Math.min(e, min);
+    }
+
+    const range = Math.abs(max - min);
+    if (range === 0) return arr.map(() => 0);
+    return arr.map(v => { return (v - min) / range })
+}
+
 function randomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-module.exports = { ask, count, feedback, meetsConditions, randomInt }
+module.exports = { ask, count, feedback, meetsConditions, normalise, randomInt }

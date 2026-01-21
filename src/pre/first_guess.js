@@ -2,7 +2,7 @@
 const fs = require('fs');
 
 const { calculateGuessEntropy } = require('../lib/entropy.js');
-const { heuristicScore } = require('../lib/heuristic.js');
+const { pfHeuristicScore } = require('../lib/heuristic.js');
 
 
 try {
@@ -22,7 +22,7 @@ try {
     let scores = new Array(words.length);
     for (let g in words) {
         const guess = words[g];
-        const s = calculateGuessEntropy(guess, words, feedback_matrix, word_index) + (heuristicScore(guess, 0, pos_freq) * 0.0004);
+        const s = calculateGuessEntropy(guess, words, feedback_matrix, word_index) + pfHeuristicScore(guess, 0, pos_freq, words.length);
         scores[g] = { word: guess, score: s };  
     }
 
