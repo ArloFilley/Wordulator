@@ -1,5 +1,7 @@
 let words = require('../data/filtered_words.json');
-const { getRandomInt, count } = require('./lib.js')
+let starting_pos_freq = require('../data/positional_frequencies.json')
+
+const { calculatePosFreq, count } = require('./lib.js')
 const readline = require('node:readline/promises');
 
 const rl = readline.createInterface({
@@ -10,6 +12,7 @@ const rl = readline.createInterface({
 let word_numbers = [words.length]
 
 async function main() {
+    let pos_freq = starting_pos_freq;
     let got_word = 'f'
     let guesses = 0;
     // Conditions 'the word' has to fulfill
@@ -30,23 +33,28 @@ async function main() {
         })
     }
 
-    console.log(`First Guess: ${words[getRandomInt(words.length)]}`)
-    
-    while (got_word.toLowerCase() === 'f') {
+    console.log(`Guess 1: CLOTH`)
+    while (got_word.toLowerCase() !== 't') {
+        // Guess
+        // Input
+        // Constraints
+        // Filter
+        // Score
         guesses += 1;
         const filtered_words = [];
         const green = (await rl.question("Green letters - use '.' for blanks: ")).toLowerCase();
         const yellow = (await rl.question("Yellow letters - use '.' for blanks: ")).toLowerCase();
         const grey = (await rl.question("Grey letters - use '.' for blanks: ")).toLowerCase();
 
-        // Set Min Using Green Input
-        for (const letter of green) {
-            if (letter !== '.') { conditions.get(letter).min += 1 }
-        }
-
-        // Set Min Using Yellow Input
-        for (const letter of yellow) {
-            if (letter !== '.') { conditions.get(letter).min += 1 }
+        
+        // Set Min Using Green & Yellow Input
+        for (const letter of green + yellow) {
+            if (letter !== '.') {
+                conditions.get(letter).min = Math.max(
+                    conditions.get(letter).min,
+                    count(green + yellow, letter)
+                );
+            }
         }
 
         // Set Max Using Grey Input
@@ -79,31 +87,44 @@ async function main() {
             }
         }
 
-        console.log(
-            `Possible Words Left: ${filtered_words.length}\n`, 
-            `Random Guess: ${filtered_words[getRandomInt(filtered_words.length)]}\n`,
-            `words: ${filtered_words}`
-        )
+        if (filtered_words.length === 0) {
+            console.log("ERROR: No Correct Word Could Be Found");
+            return;
+        } 
         
-        for (let c = 97; c <= 122; c++) {
-            conditions.get(String.fromCharCode(c)).min = 0
-        }
- 
-        let n = await rl.question('Another Guess T/F: ');
-        while (n.toLowerCase() === 't') {
-            const guess = getRandomInt(filtered_words.length);
-            console.log(`Random Guess: ${filtered_words[guess]}`);
-            n = await rl.question('Another Guess T/F: ');
+        if (filtered_words.length === 1) {
+            console.log(`Words: ${filtered_words.length}`);
+            console.log(`Solution: ${filtered_words}`);
+            console.log(`Guess ${guesses+1} - Yippeee!`);
+            console.log(`Word Numbers By Guess: ${word_numbers}`);
+            rl.close();
+            return;
         }
 
-        got_word = await rl.question('Got Word T/F: ');
+        let best_score = 0;
+        let best_guess = "";
+
+        if (filtered_words.length < 500) {
+            pos_freq = calculatePosFreq(filtered_words);
+        }
+
+        for (const w of words) {
+            let s = score(w, guesses, pos_freq)
+            if (s > best_score) {
+                best_score = s;
+                best_guess = w;
+            }
+        }
+
+        if (guesses === 1) {
+            best_guess = "bares"
+        }
+            
+        console.log(`words: ${filtered_words}`);
+        console.log(`Possible Words Left: ${filtered_words.length}\n`)
+        console.log(`Guess ${guesses+1}: ${best_guess.toUpperCase()}`);
         word_numbers.push(filtered_words.length)
     }
-    
-    guesses += 1
-    console.log(`${guesses} Guesses - Yippeee!`);
-    console.log(`Word Numbers By Guessing: ${word_numbers}`);
-    rl.close();
 }
 
 main();
@@ -129,4 +150,19 @@ function fits_conditions(word, letter_conditions) {
     }
 
     return true;
+}
+
+function score(word, guesses, positional_frequencies) {
+    let score = 0;
+    const seen = new Set();
+    for (const i in word) {
+        let c = word[i];
+        if (!seen.has(c)) {
+            score += positional_frequencies[i][c];
+            seen.add(c);
+        } else {
+            score += positional_frequencies[i][c] / (6 - guesses);
+        }
+    }
+    return score;
 }
