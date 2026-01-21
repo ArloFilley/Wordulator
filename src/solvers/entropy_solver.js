@@ -10,12 +10,6 @@ const feedback_matrix = new Uint8Array(
 const word_index = new Map()
 words.forEach((w, i) => word_index.set(w, i))
 
-function getFeedback(guess, answer) {
-    const gi = word_index.get(guess)
-    const ai = word_index.get(answer)
-    return feedback_matrix[gi * words.length + ai]
-}
-
 async function solve(opt) {
     let log;
     if (opt.type === 'benchmark') {
