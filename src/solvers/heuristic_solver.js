@@ -1,6 +1,6 @@
-let words = require('../data/filtered_words.json');
-let global_pf = require('../data/positional_frequencies.json');
-const { ask, calculatePosFreq, count, feedback, meetsConditions, score } = require('./lib.js');
+let words = require('../../data/filtered_words.json');
+let global_pf = require('../../data/positional_frequencies.json');
+const { ask, calculatePosFreq, count, feedback, meetsConditions, score } = require('../lib.js');
 
 async function solve(opt) {
     let log;

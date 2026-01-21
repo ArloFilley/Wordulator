@@ -43,6 +43,35 @@ function count(word, character) {
     return count
 }
 
+function entropyFeedback(guess, answer) {
+    let result = Array(5).fill(0)
+    let used = Array(5).fill(false)
+
+    // greens first
+    for (let i = 0; i < 5; i++) {
+        if (guess[i] === answer[i]) {
+        result[i] = 2
+        used[i] = true
+        }
+    }
+
+    // then yellows
+    for (let i = 0; i < 5; i++) {
+        if (result[i] !== 0) continue
+
+        for (let j = 0; j < 5; j++) {
+        if (!used[j] && guess[i] === answer[j]) {
+            result[i] = 1
+            used[j] = true
+            break
+        }
+        }
+    }
+
+    return result.join("")
+}
+
+
 function feedback(guess, answer) {
     const green  = ['.', '.', '.', '.', '.'];
     const yellow = ['.', '.', '.', '.', '.'];
@@ -132,4 +161,4 @@ function score(word, guesses, positional_frequencies) {
 
 
 
-module.exports = { ask, calculatePosFreq, count, feedback, meetsConditions, randomInt, score }
+module.exports = { ask, calculatePosFreq, count, entropyFeedback, feedback, meetsConditions, randomInt, score }

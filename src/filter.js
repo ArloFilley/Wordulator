@@ -21,7 +21,7 @@ try {
     console.log(`words: ${filtered_lines.length}`);
     filtered_lines = JSON.stringify(filtered_lines);
 
-    fs.writeFileSync('./filtered_long_words.json', filtered_lines)
+    fs.writeFileSync('./data/words.json', filtered_lines)
     
 } catch (err) {
     console.error(err);
