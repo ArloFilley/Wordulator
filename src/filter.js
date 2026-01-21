@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 
 try {
-    const data = fs.readFileSync('./words.txt', 'utf8');
+    const data = fs.readFileSync('./data/words.txt', 'utf8');
     let lines = data.split('\n');
     let filtered_lines = []
 
@@ -19,7 +19,7 @@ try {
 
     filtered_lines = JSON.stringify(filtered_lines);
 
-    fs.writeFileSync('./filtered_words.json', filtered_lines)
+    fs.writeFileSync('./filtered_long_words.json', filtered_lines)
     console.log(filtered_lines.length);
 } catch (err) {
     console.error(err);

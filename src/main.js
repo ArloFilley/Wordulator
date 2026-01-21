@@ -1,4 +1,4 @@
-let words = require('../data/filtered_words.json');
+let words = require('../data/filtered_long_words.json');
 const { getRandomInt, count } = require('./lib.js')
 const readline = require('node:readline/promises');
 
@@ -7,7 +7,7 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-let word_numbers = []
+let word_numbers = [words.length]
 
 async function main() {
     let got_word = 'f'
@@ -29,9 +29,10 @@ async function main() {
             banned_positions: new Set()
         })
     }
+
+    console.log(`First Guess: ${words[getRandomInt(words.length)]}`)
     
     while (got_word.toLowerCase() === 'f') {
-        word_numbers.push[words.length];
         guesses += 1;
         const filtered_words = [];
         const green = (await rl.question("Green letters - use '.' for blanks: ")).toLowerCase();
@@ -81,17 +82,27 @@ async function main() {
         console.log(
             `Possible Words Left: ${filtered_words.length}\n`, 
             `Random Guess: ${filtered_words[getRandomInt(filtered_words.length)]}\n`,
-            `List: ${filtered_words}`
+            `words: ${filtered_words}`
         )
         
         for (let c = 97; c <= 122; c++) {
             conditions.get(String.fromCharCode(c)).min = 0
         }
+ 
+        let n = await rl.question('Another Guess T/F: ');
+        while (n.toLowerCase() === 't') {
+            const guess = getRandomInt(filtered_words.length);
+            console.log(`Random Guess: ${filtered_words[guess]}`);
+            n = await rl.question('Another Guess T/F: ');
+        }
+
         got_word = await rl.question('Got Word T/F: ');
+        word_numbers.push(filtered_words.length)
     }
     
     guesses += 1
     console.log(`${guesses} Guesses - Yippeee!`);
+    console.log(`Word Numbers By Guessing: ${word_numbers}`);
     rl.close();
 }
 
