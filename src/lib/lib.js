@@ -11,24 +11,6 @@ async function ask(q) {
 }
 
 /**
- * Calculates the positional frequencies of letters based on a list of words
- * @param {Array<Array<string>>} words 
- * @returns 
- */
-function calculatePosFreq(words) {
-    let positional_frequencies = Array.from({length: 5}, () => ({}));
-
-    for (const word of words) {
-        for (let i = 0; i < 5; i++) {
-            const char = word[i];
-            positional_frequencies[i][char] = (positional_frequencies[i][char] || 0) + 1;
-        }
-    }
-
-    return positional_frequencies;
-}
-
-/**
  * Counts the number of a given character in a word
  * @param {*} word 
  * @param {*} char 
@@ -41,34 +23,6 @@ function count(word, character) {
     }
 
     return count
-}
-
-function entropyFeedback(guess, answer) {
-    let result = Array(5).fill(0)
-    let used = Array(5).fill(false)
-
-    // greens first
-    for (let i = 0; i < 5; i++) {
-        if (guess[i] === answer[i]) {
-        result[i] = 2
-        used[i] = true
-        }
-    }
-
-    // then yellows
-    for (let i = 0; i < 5; i++) {
-        if (result[i] !== 0) continue
-
-        for (let j = 0; j < 5; j++) {
-        if (!used[j] && guess[i] === answer[j]) {
-            result[i] = 1
-            used[j] = true
-            break
-        }
-        }
-    }
-
-    return result.join("")
 }
 
 
@@ -136,29 +90,4 @@ function randomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-/**
- * Scores a word based on positional frequencies of letters
- * @param {string} word 
- * @param {number} guesses 
- * @param {Array<[char,number]>} positional_frequencies 
- * @returns 
- */
-function score(word, guesses, positional_frequencies) {
-    let score = 0;
-    const seen = new Set();
-    for (const i in word) {
-        let c = word[i];
-        if (!seen.has(c)) {
-            score += positional_frequencies[i][c];
-            seen.add(c);
-        } else {
-            score += positional_frequencies[i][c] / (6 - guesses);
-        }
-    }
-    return score;
-}
-
-
-
-
-module.exports = { ask, calculatePosFreq, count, entropyFeedback, feedback, meetsConditions, randomInt, score }
+module.exports = { ask, count, feedback, meetsConditions, randomInt }

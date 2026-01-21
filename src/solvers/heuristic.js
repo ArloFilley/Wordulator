@@ -1,14 +1,8 @@
-let words = require('../../data/filtered_words.json');
-let global_pf = require('../../data/positional_frequencies.json');
-const { ask, count, feedback, meetsConditions, calculatePosFreq, } = require('../lib.js');
+const { ask, count, feedback, meetsConditions } = require('../lib/lib.js');
+const { calculatePosFreq, heuristicScore } = require('../lib/heuristic.js')
 
-const fs = require('fs')
-const feedback_matrix = new Uint8Array(
-    fs.readFileSync('./data/feedback.bin')
-)
-
-const word_index = new Map()
-words.forEach((w, i) => word_index.set(w, i))
+let words = require('../../data/filter/words.json');
+let global_pf = require('../../data/proc/pos_freq.json');
 
 async function solve(opt) {
     let log;
@@ -37,25 +31,23 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Score
-        let best_guess = 'bears'
-        let best_score = -Infinity
+        let best_score = 0;
+        let best_guess = "";
         if (fw.length < 500) {
-            let pf = calculatePosFreq(fw);
-            for (let guess of fw) {
-                let h = calculateGuessEntropy(guess, fw) + (score(guess, guesses, pf) / fw.length);
-
-                if (h > best_score) {
-                    best_score = h
-                    best_guess = guess
+            pf = calculatePosFreq(fw);
+            for (const w of fw) {
+                let s = heuristicScore(w, guesses, pf)
+                if (s > best_score) {
+                    best_score = s;
+                    best_guess = w;
                 }
             }
         } else {
-            for (let guess of words) {
-                let h = calculateGuessEntropy(guess, fw) + (score(guess, guesses, pf) / words.length);
-
-                if (h > best_score) {
-                    best_score = h
-                    best_guess = guess
+            for (const w of words) {
+                let s = heuristicScore(w, guesses, pf)
+                if (s > best_score) {
+                    best_score = s;
+                    best_guess = w;
                 }
             }
         }
@@ -141,47 +133,6 @@ async function solve(opt) {
             return { solved: true, answer: filtered_words[0], guesses: guesses, word_count: word_numbers };
         }
     }
-}
-
-function calculateGuessEntropy(guess, words) {
-    let buckets = new Map();
-
-    for (let answer of words) {
-        const pattern = feedback_matrix[word_index.get(guess) * words.length + word_index.get(answer)];
-        buckets.set(pattern, (buckets.get(pattern) || 0) + 1);
-    }
-
-    let total = words.length;
-    let entropy = 0;
-
-    for (let count of buckets.values()) {
-        let p = count / total;
-        entropy -= p * Math.log2(p);
-    }
-
-    return entropy;
-}
-
-/**
- * Scores a word based on positional frequencies of letters
- * @param {string} word 
- * @param {number} guesses 
- * @param {Array<[char,number]>} positional_frequencies 
- * @returns 
- */
-function score(word, guesses, positional_frequencies) {
-    let score = 0;
-    const seen = new Set();
-    for (const i in word) {
-        let c = word[i];
-        if (!seen.has(c)) {
-            score += positional_frequencies[i][c];
-            seen.add(c);
-        } else {
-            score += positional_frequencies[i][c] / (6 - guesses);
-        }
-    }
-    return score;
 }
 
 module.exports = { solve }

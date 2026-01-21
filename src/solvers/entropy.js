@@ -1,12 +1,10 @@
-let words = require('../../data/filtered_words.json');
-let global_pf = require('../../data/positional_frequencies.json');
-const { ask, count, feedback, meetsConditions, } = require('../lib.js');
-
 const fs = require('fs')
-const feedback_matrix = new Uint8Array(
-    fs.readFileSync('./data/feedback.bin')
-)
 
+const { ask, count, feedback, meetsConditions, randomInt } = require('../lib/lib.js');
+const { calculateGuessEntropy } = require('../lib/entropy.js');
+
+let words = require('../../data/filter/words.json');
+const feedback_matrix = new Uint8Array(fs.readFileSync('./data/proc/feedback_matrix.bin'));
 const word_index = new Map()
 words.forEach((w, i) => word_index.set(w, i))
 
@@ -36,24 +34,26 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Score
-        let best_guess = 'bears'
-        let best_entropy = -Infinity
-        if (fw.length < 500) {
+        let best_guess = '!@??*';
+        let best_entropy = -Infinity;
+        if (guesses === 0) {
+            best_guess = first_guesses[randomInt(first_guesses.length)];
+        } else if (fw.length < 500) {
             for (let guess of fw) {
-                let h = calculateGuessEntropy(guess, fw)
+                let h = calculateGuessEntropy(guess, fw, feedback_matrix, word_index);
 
                 if (h > best_entropy) {
-                    best_entropy = h
-                    best_guess = guess
+                    best_entropy = h;
+                    best_guess = guess;
                 }
             }
         } else {
             for (let guess of words) {
-                let h = calculateGuessEntropy(guess, fw)
+                let h = calculateGuessEntropy(guess, fw, feedback_matrix, word_index);
 
                 if (h > best_entropy) {
-                    best_entropy = h
-                    best_guess = guess
+                    best_entropy = h;
+                    best_guess = guess;
                 }
             }
         }
@@ -87,8 +87,7 @@ async function solve(opt) {
         for (const letter of green + yellow) {
             if (letter !== '.') {
                 conditions.get(letter).min = Math.max(
-                    conditions.get(letter).min,
-                    count(green + yellow, letter)
+                    conditions.get(letter).min, count(green + yellow, letter)
                 );
             }
         }
@@ -96,32 +95,32 @@ async function solve(opt) {
         // Set Max Using Grey Input
         for (const letter of grey) {
             if (letter !== '.') { 
-                conditions.get(letter).max = conditions.get(letter).min
+                conditions.get(letter).max = conditions.get(letter).min;
             }
         }
 
         // Set Fixed Positions Using Green Input
         for (const lttr in green) {
-            const letter = green[lttr]
+            const letter = green[lttr];
             if (letter !== '.') {
-                conditions.get(letter).fixed_positions.add(lttr)
+                conditions.get(letter).fixed_positions.add(lttr);
             }
         }
 
         // Set Banned Positions Using Yellow Input
         for (const lttr in yellow) {
-            const letter = yellow[lttr]
+            const letter = yellow[lttr];
             if (letter !== '.') {
-                conditions.get(letter).banned_positions.add(lttr)
+                conditions.get(letter).banned_positions.add(lttr);
             }
         }
         
         // Filter
         const filtered_words = [];
-        const cond = [...conditions].map((e) => e)
+        const cond = [...conditions].map((e) => e);
         for (let word of fw) {
             if (meetsConditions(word, cond)) {
-                filtered_words.push(word)
+                filtered_words.push(word);
             }
         }
 
@@ -139,25 +138,6 @@ async function solve(opt) {
             return { solved: true, answer: filtered_words[0], guesses: guesses, word_count: word_numbers };
         }
     }
-}
-
-function calculateGuessEntropy(guess, words) {
-    let buckets = new Map();
-
-    for (let answer of words) {
-        const pattern = feedback_matrix[word_index.get(guess) * words.length + word_index.get(answer)];
-        buckets.set(pattern, (buckets.get(pattern) || 0) + 1);
-    }
-
-    let total = words.length;
-    let entropy = 0;
-
-    for (let count of buckets.values()) {
-        let p = count / total;
-        entropy -= p * Math.log2(p);
-    }
-
-    return entropy;
 }
 
 module.exports = { solve }

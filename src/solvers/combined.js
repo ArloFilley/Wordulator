@@ -1,6 +1,16 @@
-let words = require('../../data/filtered_words.json');
-let global_pf = require('../../data/positional_frequencies.json');
-const { ask, calculatePosFreq, count, feedback, meetsConditions, score } = require('../lib.js');
+
+const fs = require('fs');
+
+const { calculatePosFreq, heuristicScore } = require('../lib/heuristic.js');
+const { calculateGuessEntropy }   = require('../lib/entropy.js');
+const { ask, count, feedback, meetsConditions, randomInt } = require('../lib/lib.js');
+
+const words = require('../../data/filter/words.json');
+const pos_freq = require('../../data/proc/pos_freq.json');
+const feedback_matrix = new Uint8Array( fs.readFileSync('./data/proc/feedback_matrix.bin'));
+const first_guesses = require('../../data/proc/first_guesses.json');
+const word_index = new Map();
+words.forEach((w, i) => word_index.set(w, i));
 
 async function solve(opt) {
     let log;
@@ -11,12 +21,12 @@ async function solve(opt) {
     }
 
     let fw = words;
-    let pf = global_pf;
+    let pf = pos_freq;
     let guesses = 0;
     const word_numbers = []
-
     /** @type Map<char, object> */
     let conditions = new Map();
+
     // Set Starting Conditions
     for (let c = 97; c <= 122; c++) {
         conditions.set(String.fromCharCode(c), {
@@ -29,23 +39,28 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Score
-        let best_score = 0;
-        let best_guess = "";
-        if (fw.length < 500) {
-            pf = calculatePosFreq(fw);
-            for (const w of fw) {
-                let s = score(w, guesses, pf)
+        let best_guess = '!@??*';
+        let best_score = -Infinity;
+        if (guesses == 0) {
+            let rand_idx = randomInt(100);
+            best_guess = first_guesses[rand_idx].word;
+        } else if (fw.length < 2000) {
+            let pf = calculatePosFreq(fw);
+            for (let guess of fw) {
+                const s = calculateGuessEntropy(guess, words, feedback_matrix, word_index) + (heuristicScore(guess, 0, pf) * 0.0002 * guesses);
+
                 if (s > best_score) {
-                    best_score = s;
-                    best_guess = w;
+                    best_score = s
+                    best_guess = guess
                 }
             }
         } else {
-            for (const w of words) {
-                let s = score(w, guesses, pf)
+            for (let guess of words) {
+                let s = calculateGuessEntropy(guess, fw, feedback_matrix, word_index) + (heuristicScore(guess, guesses, pf) * (0.0001 * guesses));
+
                 if (s > best_score) {
-                    best_score = s;
-                    best_guess = w;
+                    best_score = s
+                    best_guess = guess
                 }
             }
         }
