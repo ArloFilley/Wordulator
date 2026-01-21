@@ -11,16 +11,18 @@ try {
             !line.includes(',') &&
             !line.includes('.') &&
             !line.includes('/') &&
-            !line.includes(`'`)
+            !line.includes(`'`) &&
+            !line.includes(`2`)
         ) {
             filtered_lines.push(line.toLowerCase())
         }
     }
 
+    console.log(`words: ${filtered_lines.length}`);
     filtered_lines = JSON.stringify(filtered_lines);
 
     fs.writeFileSync('./filtered_long_words.json', filtered_lines)
-    console.log(filtered_lines.length);
+    
 } catch (err) {
     console.error(err);
 }

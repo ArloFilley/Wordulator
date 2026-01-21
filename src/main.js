@@ -1,4 +1,4 @@
-let words = require('../data/filtered_long_words.json');
+let words = require('../data/filtered_words.json');
 const { getRandomInt, count } = require('./lib.js')
 const readline = require('node:readline/promises');
 
