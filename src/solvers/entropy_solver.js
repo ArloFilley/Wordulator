@@ -44,11 +44,18 @@ async function solve(opt) {
         // Strategize & Score
         let best_guess = 'bears'
         let best_entropy = -Infinity
-        if (guesses === 0) {
-            best_guess = 'track'
-        } else if (fw < 1000){
+        if (fw.length < 500) {
             for (let guess of fw) {
-                let h = calculateGuessEntropy(guess, words)
+                let h = calculateGuessEntropy(guess, fw)
+
+                if (h > best_entropy) {
+                    best_entropy = h
+                    best_guess = guess
+                }
+            }
+        } else {
+            for (let guess of words) {
+                let h = calculateGuessEntropy(guess, fw)
 
                 if (h > best_entropy) {
                     best_entropy = h

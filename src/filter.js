@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 
 try {
-    const data = fs.readFileSync('./data/words.txt', 'utf8');
+    const data = fs.readFileSync('./data/wordle_wordlist.txt', 'utf8');
     let lines = data.split('\n');
     let filtered_lines = []
 
