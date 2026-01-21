@@ -1,4 +1,4 @@
-const { solve } = require('./src/solvers/entropy_solver.js');
+const { solve } = require('./src/solvers/combined_solver.js');
 
 async function main() {
     console.clear();

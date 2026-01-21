@@ -1,7 +1,7 @@
 // Precomuputes Frequencies of Letters in Words
 const fs = require('node:fs');
 
-let words = require('../data/filtered_words.json');
+let words = require('../../data/filtered_words.json');
 let positional_frequencies = Array.from({length: 5}, () => ({}));
 
 for (const word of words) {

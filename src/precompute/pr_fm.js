@@ -1,6 +1,6 @@
 const fs = require('fs')
-const words = require('../data/filtered_words.json')
-const { entropyFeedback } = require('./lib.js')
+const words = require('../../data/filtered_words.json')
+const { entropyFeedback } = require('../lib.js')
 
 const matrix = new Uint8Array(words.length**2)
 
