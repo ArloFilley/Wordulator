@@ -58,6 +58,7 @@ async function benchmark(solve, benchmark_num = 100) {
             console.log(`Solved ${i+1}/${benchmark_num} | guesses:  ${result.guesses} | running avg: ${avg.toFixed(2)}`);
         } else {
             avg = total_guesses/(i+1);
+            total_guesses += 7;
             console.clear();
             console.log(`Solved ${i+1}/${benchmark_num} | guesses: >6`);
         }

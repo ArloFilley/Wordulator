@@ -1,7 +1,7 @@
 /** Precomputes a frequency matrix for a given set of words */
 const fs = require('fs');
 
-const { entropyFeedback, encodePattern } = require('../lib/entropy.js');
+const { entropyFeedback } = require('../lib/entropy.js');
 
 
 try {
@@ -11,18 +11,19 @@ try {
     
     const words = JSON.parse(fs.readFileSync(words_file));
     const matrix = new Uint8Array(words.length**2);
+    const wl = words.length;
     
-    for (const guess_idx in words) {
-        const guess = words[guess_idx];
+    for (let gi=0; gi < wl; gi++) {
+        const guess = words[gi];
 
-        for (const answer_idx in words) {
-            const answer = words[answer_idx];
+        for (let ai; ai < wl; ai++) {
+            const answer = words[ai];
             const pattern = entropyFeedback(guess, answer);
-            matrix[guess_idx * words.length + answer_idx] = encodePattern(pattern);
+            matrix[gi * wl + ai] = pattern;
         }
 
-        if (guess_idx % 100 === 0) {
-            console.log(`Computed ${guess_idx}/${words.length}`);
+        if (gi % 100 === 0) {
+            console.log(`Computed ${gi}/${words.length}`);
         }
     }
 

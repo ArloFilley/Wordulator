@@ -1,6 +1,8 @@
 /** Precomuputes Frequencies of Letters in Words */
 const fs = require('node:fs');
 
+const { calculatePosFreq } = require('../lib/heuristic.js')
+
 
 try {
     const args = process.argv.slice(2);
@@ -9,14 +11,7 @@ try {
 
     let words = JSON.parse(fs.readFileSync(words_file));
 
-    let positional_frequencies = Array.from({length: 5}, () => ({}));
-
-    for (const word of words) {
-        for (let i = 0; i < 5; i++) {
-            const char = word[i];
-            positional_frequencies[i][char] = (positional_frequencies[i][char] || 0) + 1;
-        }
-    }
+    let positional_frequencies = calculatePosFreq(words)
 
     fs.writeFileSync(`${write_dir}/pos_freq.json`, JSON.stringify(positional_frequencies, null, 4));
     console.log(`Positional Frequencies Written to ${write_dir}/pos_freq.json`);

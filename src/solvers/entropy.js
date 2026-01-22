@@ -5,6 +5,7 @@ const { calculateGuessEntropy } = require('../lib/entropy.js');
 
 let words = require('../../data/filter/words.json');
 const feedback_matrix = new Uint8Array(fs.readFileSync('./data/proc/feedback_matrix.bin'));
+const first_guesses = require('../../data/proc/first_guesses.json');
 const word_index = new Map()
 words.forEach((w, i) => word_index.set(w, i))
 
@@ -37,8 +38,8 @@ async function solve(opt) {
         let best_guess = '!@??*';
         let best_entropy = -Infinity;
         if (guesses === 0) {
-            best_guess = first_guesses[randomInt(first_guesses.length)];
-        } else if (fw.length < 500) {
+            best_guess = first_guesses[0];
+        } else if (fw.length < 1000) {
             for (let guess of fw) {
                 let h = calculateGuessEntropy(guess, fw, feedback_matrix, word_index);
 

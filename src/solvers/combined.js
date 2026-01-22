@@ -47,14 +47,15 @@ async function solve(opt) {
         if (fw.length !== words.length) pf = calculatePosFreq(fw);
 
         if (guesses === 0) {
-            let rand_idx = randomInt(100);
-            best_guess = first_guesses[rand_idx].word;
+            //let rand_idx = randomInt(100);
+            best_guess = first_guesses[1].word;
         } else if (fw.length > 200) {
             pf = calculatePosFreq(fw);
-            for (let guess of fw) {
-                scores.ent.push(calculateGuessEntropy(guess, fw, feedback_matrix, word_index));
-                scores.pfh.push(pfHeuristicScore(guess, guesses, pf, fw.length));
-                scores.unh.push(uniquenessHeuristicScore(guess));
+            const fwi = fw.map(v => word_index.get(v));
+            for (let gi=0; gi < fw.length; gi++) {
+                scores.ent.push(calculateGuessEntropy(gi, fw, feedback_matrix, fwi));
+                scores.pfh.push(pfHeuristicScore(fw[gi], pf));
+                scores.unh.push(uniquenessHeuristicScore(fw[gi]));
             }
 
             log(scores.pfh);
@@ -69,6 +70,7 @@ async function solve(opt) {
                 let score  = scores.ent[i] * w.ent;
                     score += scores.pfh[i] * w.pfh;
                     score += scores.unh[i] * w.unh;
+                    score += 0.01 * Math.random();
 
                 if (score > best_score) {
                     best_score = score;
@@ -79,21 +81,19 @@ async function solve(opt) {
             pf = calculatePosFreq(fw);
             for (let guess of words) {
                 scores.ent.push(calculateGuessEntropy(guess, fw, feedback_matrix, word_index));
-                scores.pfh.push(pfHeuristicScore(guess, guesses, pf, fw.length));
+                scores.pfh.push(pfHeuristicScore(guess, pf));
                 scores.unh.push(uniquenessHeuristicScore(guess));
             }
-            log(scores.pfh);
 
             scores.ent = normalise(scores.ent);
             scores.pfh = normalise(scores.pfh);
             scores.unh = normalise(scores.unh);
 
-            log(scores.pfh);
-
             for (let i=0; i<fw.length; i++) {
                 let score  = scores.ent[i] * w.ent;
                     score += scores.pfh[i] * w.pfh;
                     score += scores.unh[i] * w.unh;
+                    score += 0.01 * Math.random();
 
                 if (score > best_score) {
                     best_score = score;
@@ -188,9 +188,9 @@ async function solve(opt) {
 function weights (progress) {
     let p = progress * 10
     return {
-        ent: 10 / (1.2**p),
-        pfh: 0.6 * p,
-        unh: 3 * Math.log(p) 
+        ent: 30 - 2 * p,
+        pfh: 0.3 * p,
+        unh: 3 - 0.3 * p
     };
 }
 

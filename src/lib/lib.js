@@ -25,9 +25,22 @@ function count(word, character) {
     return count
 }
 
+function calcGradient(x1, x2, y1, y2) {
+    return (y2 - y1)/(x2 - x1);
+}
 
+/**
+ * Provides Feedback in the form of 3 arrays:
+ *     one with green fixed positions
+ *     one with yellow wrong positions
+ *     one with grey not present/overpresent letters  
+ * @param {*} guess 
+ * @param {*} answer 
+ * @returns 
+ */
 function feedback(guess, answer) {
-    const green  = ['.', '.', '.', '.', '.'];
+    const wl = guess.length;
+    const green  = new Array(5).fill('.');
     const yellow = ['.', '.', '.', '.', '.'];
     const grey   = ['.', '.', '.', '.', '.'];
 
@@ -109,4 +122,4 @@ function randomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-module.exports = { ask, count, feedback, meetsConditions, normalise, randomInt }
+module.exports = { ask, count, calcGradient, feedback, meetsConditions, normalise, randomInt }

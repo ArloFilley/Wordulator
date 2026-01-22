@@ -1,5 +1,5 @@
 const { ask, count, feedback, meetsConditions } = require('../lib/lib.js');
-const { calculatePosFreq, heuristicScore: pfHeuristicScore } = require('../lib/heuristic.js')
+const { calculatePosFreq, pfHeuristicScore } = require('../lib/heuristic.js')
 
 let words = require('../../data/filter/words.json');
 let global_pf = require('../../data/proc/pos_freq.json');
@@ -36,7 +36,7 @@ async function solve(opt) {
         if (fw.length < 500) {
             pf = calculatePosFreq(fw);
             for (const w of fw) {
-                let s = pfHeuristicScore(w, guesses, pf)
+                let s = pfHeuristicScore(w, pf)
                 if (s > best_score) {
                     best_score = s;
                     best_guess = w;
@@ -44,7 +44,7 @@ async function solve(opt) {
             }
         } else {
             for (const w of words) {
-                let s = pfHeuristicScore(w, guesses, pf)
+                let s = pfHeuristicScore(w, pf)
                 if (s > best_score) {
                     best_score = s;
                     best_guess = w;
