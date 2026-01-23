@@ -2,23 +2,17 @@
 const fs = require('fs');
 
 const { calculatePosFreq, pfHeuristicScore } = require('../lib/heuristic.js');
-const { calculateGuessEntropy, genEntropyTable }   = require('../lib/entropy.js');
+const { calculateGuessEntropy, genEntropyTable, encodePattern }   = require('../lib/entropy.js');
 const { ask, count, feedback, meetsConditions, normalise } = require('../lib/lib.js');
 
 const words = require('../../data/filter/words.json');
-const pos_freq = require('../../data/proc/pos_freq.json');
-const feedback_matrix = new Uint8Array( fs.readFileSync('./data/proc/feedback_matrix.bin'));
-const first_guesses = require('../../data/proc/first_guesses.json');
+const feedback_matrix = new Uint8Array(fs.readFileSync('./data/proc/feedback_matrix.bin'));
+const second_guesses = new Uint8Array(fs.readFileSync('./data/proc/second_guesses.bin'));
 const word_index = new Map();
 words.forEach((w, i) => word_index.set(w, i));
 
 async function solve(opt) {
-    let log;
-    if (opt.type === 'benchmark') {
-        log = () => {};
-    } else {
-        log = console.log;
-    }
+    let log = opt.log;
 
     let fw = words;
     let pf = pos_freq;
@@ -26,6 +20,7 @@ async function solve(opt) {
     const word_numbers = []
     /** @type Map<char, object> */
     let conditions = new Map();
+    let previous_guess_feedback = null;
 
     // Set Starting Conditions
     for (let c = 97; c <= 122; c++) {
@@ -37,18 +32,27 @@ async function solve(opt) {
         })
     }
 
+    const scores = { ent: new Array(words.length), pfh: new Array(words.length) }
+
     while (true) {
         // Strategize & Score
-        const progress = 1 - fw.length / words.length;
         let best_guess = '!@??*';
         let best_score = -Infinity;
-        let scores = { ent: new Array(words.length), pfh: new Array(words.length) }
+        
         let cond = [...conditions].map((e) => e)
 
         if (fw.length !== words.length) pf = calculatePosFreq(fw);
 
-        if (guesses === 0) {
-            best_guess = 'tares';
+        if (guesses === 0) best_guess = 'tares'; // First guess is predefined based on entropy
+        else if (guesses === 1 && fw.length > opt.weights.) { // If we're still in the early game after first guess use predefined entropy for second guess
+            let pat = '';
+            for (let l = 0; l < 5; l++) {
+                if (previous_guess_feedback.gre[l] !== '.') pat += '2';
+                else if (previous_guess_feedback.yel[l] === '.') pat += '1';
+                else pat += '0';
+            }
+            const pattern = encodePattern(pat);
+            best_guess    = words[second_guesses[pattern]];
         } else {
             pf = calculatePosFreq(fw);
             const fwi = words.map(v => word_index.get(v));
@@ -129,45 +133,45 @@ async function solve(opt) {
             yellow   = await ask("Yellow Letters - Use '.' for any blanks: ");
             grey     = await ask("Grey Letters   - Use '.' for any blanks: ");
         }
+        previous_guess_feedback = {gre: green, yel:yellow, gry:grey};
 
         // Constraints
         // Set Min Using Green & Yellow Input
-        for (const letter of green + yellow) {
-            if (letter !== '.') {
-                conditions.get(letter).min = Math.max(
-                    conditions.get(letter).min,
-                    count(green + yellow, letter)
-                );
-            }
+        let gy = green + yellow;
+        for (let l=0; l<gy.length; l++) {
+            const letter = gy[l];
+            if (letter === '.') continue;
+            conditions.get(letter).min = Math.max(
+                conditions.get(letter).min, count(gy, letter)
+            );
         }
 
         // Set Max Using Grey Input
-        for (const letter of grey) {
-            if (letter !== '.') { 
-                conditions.get(letter).max = conditions.get(letter).min
-            }
+        for (let l=0; l<grey.length; l++) {
+            const letter = grey[l];
+            if (letter === '.') continue;
+            conditions.get(letter).max = conditions.get(letter).min
         }
 
         // Set Fixed Positions Using Green Input
-        for (const lttr in green) {
-            const letter = green[lttr]
-            if (letter !== '.') {
-                conditions.get(letter).fixed_positions.add(lttr)
-            }
+        for (let l=0; l<green.length; l++) {
+            const letter = green[l]
+            if (letter === '.') continue;
+            conditions.get(letter).fixed_positions.add(l)
         }
 
         // Set Banned Positions Using Yellow Input
-        for (const lttr in yellow) {
-            const letter = yellow[lttr]
-            if (letter !== '.') {
-                conditions.get(letter).banned_positions.add(lttr)
-            }
+        for (let l=0; l<yellow.length; l++) {
+            const letter = yellow[l]
+            if (letter === '.') continue;
+            conditions.get(letter).banned_positions.add(l)
         }
         
         // Filter
         const filtered_words = [];
         cond = [...conditions].map((e) => e)
-        for (let word of fw) {
+        for (let w=0; w<fw.length; w++) {
+            const word = fw[w];
             if (meetsConditions(word, cond)) {
                 filtered_words.push(word)
             }

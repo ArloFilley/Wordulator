@@ -6,7 +6,7 @@ let { randomInt, randomUniform } = require('./src/lib/lib.js')
 
 let words = require('./data/filter/words.json');
 let test_data = require('./data/test/tests.json')
-let pre_weights = require("./data/proc/custom_weights.json")
+let pre_weights = require("./data/proc/optimised_end_weights.json")
 
 
 main();
@@ -30,11 +30,11 @@ async function main() {
         }
 
         switch (type) {
-            case 'bench'     : await benchmark(solve, num, pre_weights, test_data, console.log); break;
-            case 'benchmark' : await benchmark(solve, num, pre_weights, test_data, console.log); break;
-            case 'wt'        : await weight_test(solvenum, num2);                                break;
-            case 'wtest'     : await weight_test(solve, num, num2);                              break;
-            case 'user'      : await solve({ type: "user", weights: pre_weights, rand: true });  break;
+            case 'bench'     : await benchmark(solve, num, pre_weights, test_data, console.log);            break;
+            case 'benchmark' : await benchmark(solve, num, pre_weights, test_data, console.log);            break;
+            case 'wt'        : await weight_test(solve, num, num2);                                           break;
+            case 'wtest'     : await weight_test(solve, num, num2);                                         break;
+            case 'user'      : await solve({ type: "user", weights: pre_weights, rand: true, log: true });  break;
             default: throw `Invalid Mode Selected ${type}`
         }
     
@@ -66,7 +66,7 @@ async function benchmark(solve, benchmark_num = 100, weights, tests , log) {
         let result;
 
         if (tests !== undefined) ans = tests[i];
-        if (weights !== undefined) result = await solve({ type: 'benchmark', answer: ans, weights, rand: false });
+        if (weights !== undefined) result = await solve({ type: 'benchmark', answer: ans, weights, rand: false, log: () => {} });
         else result = await solve({ type: 'benchmark', answer: ans });
 
         if (result.solved === true) {
@@ -116,14 +116,14 @@ async function weight_test(solve, trials, evaluations) {
     for (let t = 0; t < trials; t++) {
         // Sample in log space
         let eu1 = randomUniform(0, 3);
-        let pu1 = randomUniform(-2, 0);
+        let pu1 = randomUniform(-2, 1);
         let cu1 = randomUniform(-2, 2);
 
         let eu2 = randomUniform(-2, 2);
         let pu2 = randomUniform(-2, 2);
         let cu2 = randomUniform(-2, 2);
 
-        let eu3 = randomUniform(-2, 0);
+        let eu3 = randomUniform(-2, 1);
         let pu3 = randomUniform(0, 2);
         let cu3 = randomUniform(0, 2);
         let mcu = 200;
@@ -138,20 +138,20 @@ async function weight_test(solve, trials, evaluations) {
             let cw1 =  1.60958;
 
         // Middle Weights
-            // let ew2 = Math.pow(10, wu2);
-            // let pw2 = Math.pow(10, pu2);
-            // let cw2 = Math.pow(10, cu2);
-            let ew2 =  0.03572;
-            let pw2 = 27.22678;
-            let cw2 = 93.23757;
+            let ew2 = Math.pow(10, eu2);
+            let pw2 = Math.pow(10, pu2);
+            let cw2 = Math.pow(10, cu2);
+            // let ew2 =  0.03572;
+            // let pw2 = 27.22678;
+            // let cw2 = 93.23757;
 
         // End Weights
-            let ew3 = Math.pow(10, eu3);
-            let pw3 = Math.pow(10, pu3);
-            let cw3 = Math.pow(10, cu3);
-            // let ew3 = 1.142923205098694;
-            // let pw3 = 3.5717658924961353;
-            // let cw3 = 4.11375855384808;
+            // let ew3 = Math.pow(10, eu3);
+            // let pw3 = Math.pow(10, pu3);
+            // let cw3 = Math.pow(10, cu3);
+            let ew3 =  0.67722;
+            let pw3 =  1.84866;
+            let cw3 = 14.50852;
         
         weights = { 
             ew: [ew1, ew2, ew3], 
@@ -167,7 +167,7 @@ async function weight_test(solve, trials, evaluations) {
 
         // Keep the best result
         if (score < bestScore) {
-            console.log(`New Best Score - Avg:${score.toFixed(8)} - Avg Imp: ${bestScores.avg - result.avg} - Acc Dff: ${result.acc - bestScores.acc} | ew: ${ew3.toFixed(5)} pw: ${pw3.toFixed(5)} cw: ${cw3.toFixed(5)}`),
+            console.log(`New Best Score - Avg:${score.toFixed(8)} - Avg Imp: ${bestScores.avg - result.avg} - Acc Dff: ${result.acc - bestScores.acc} | ew: ${ew2.toFixed(5)} pw: ${pw2.toFixed(5)} cw: ${cw2.toFixed(5)}`),
             bestScore = score;
             bestScores = result;
             bestWeights = weights;
@@ -175,7 +175,7 @@ async function weight_test(solve, trials, evaluations) {
 
         console.log(`${t+1}/${trials} - ${(t+1)*evaluations}/${evaluations*trials}\n`, 
             `\t-> This Score ${result.avg.toFixed(6)} - ${result.acc.toFixed(4)} | ew: ${ew3.toFixed(5)} pw: ${pw3.toFixed(5)} cw: ${cw3.toFixed(5)}\n`,
-            `\t-> Best Score ${bestScores.avg.toFixed(6)} - ${bestScores.acc.toFixed(4)} | ew: ${bestWeights.ew[2].toFixed(5)} pw: ${bestWeights.pw[2].toFixed(5)} cw: ${bestWeights.cw[2].toFixed(5)}\n`
+            `\t-> Best Score ${bestScores.avg.toFixed(6)} - ${bestScores.acc.toFixed(4)} | ew: ${bestWeights.ew[1].toFixed(5)} pw: ${bestWeights.pw[1].toFixed(5)} cw: ${bestWeights.cw[1].toFixed(5)}\n`
         );
     }
 

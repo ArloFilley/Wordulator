@@ -16,11 +16,6 @@ function calculateGuessEntropy(guess_index, word_list, feedback_matrix, word_ind
         buckets[pattern] += 1;
     }
 
-    let empty = 0;
-    for (let i = 0; i < 243; i++) { 
-        if (buckets[i] === 0) empty++;
-    }
-
     let entropy = 0;
     if (ent_table !== undefined) {
         for (let i = 0; i < 243; i++) {
