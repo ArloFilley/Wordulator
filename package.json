@@ -10,7 +10,7 @@
     "gen-pos-freq"        : "node ./src/pre/pos_freq.js          data/filter/words.json   data/proc",
     "gen-feedback-matrix" : "node ./src/pre/feedback_matrix.js   data/filter/words.json   data/proc",
     "gen-first-guesses"   : "node ./src/pre/first_guess.js       data/filter/words.json   data/proc/pos_freq.json   data/proc/feedback_matrix.bin  500  data/proc",
-    "gen-tests"           : "node ./src/pre/test.js              data/filter/words.json   data/test 50"
+    "gen-tests"           : "node ./src/pre/test.js              data/filter/words.json   data/test 5000"
   },
   "author": "Arlo Filley",
   "license": "ISC"

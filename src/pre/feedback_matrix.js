@@ -16,7 +16,7 @@ try {
     for (let gi=0; gi < wl; gi++) {
         const guess = words[gi];
 
-        for (let ai; ai < wl; ai++) {
+        for (let ai = 0; ai < wl; ai++) {
             const answer = words[ai];
             const pattern = entropyFeedback(guess, answer);
             matrix[gi * wl + ai] = pattern;

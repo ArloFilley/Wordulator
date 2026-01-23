@@ -1,9 +1,9 @@
 
 const fs = require('fs');
 
-const { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore } = require('../lib/heuristic.js');
-const { calculateGuessEntropy }   = require('../lib/entropy.js');
-const { ask, count, feedback, meetsConditions, normalise, randomInt } = require('../lib/lib.js');
+const { calculatePosFreq, pfHeuristicScore } = require('../lib/heuristic.js');
+const { calculateGuessEntropy, genEntropyTable }   = require('../lib/entropy.js');
+const { ask, count, feedback, meetsConditions, normalise } = require('../lib/lib.js');
 
 const words = require('../../data/filter/words.json');
 const pos_freq = require('../../data/proc/pos_freq.json');
@@ -39,79 +39,83 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Score
-        const w = weights(1 - fw.length / words.length);
+        const progress = 1 - fw.length / words.length;
         let best_guess = '!@??*';
         let best_score = -Infinity;
-        let scores = { ent: [], pfh: [], unh:[] }
+        let scores = { ent: new Array(words.length), pfh: new Array(words.length) }
+        let cond = [...conditions].map((e) => e)
 
         if (fw.length !== words.length) pf = calculatePosFreq(fw);
 
         if (guesses === 0) {
-            //let rand_idx = randomInt(100);
-            best_guess = first_guesses[1].word;
-        } else if (fw.length > 200) {
+            best_guess = 'tares';
+        } else {
             pf = calculatePosFreq(fw);
-            const fwi = fw.map(v => word_index.get(v));
-            for (let gi=0; gi < fw.length; gi++) {
-                scores.ent.push(calculateGuessEntropy(gi, fw, feedback_matrix, fwi));
-                scores.pfh.push(pfHeuristicScore(fw[gi], pf));
-                scores.unh.push(uniquenessHeuristicScore(fw[gi]));
+            const fwi = words.map(v => word_index.get(v));
+            const ent_table = genEntropyTable(fw.length);
+
+            for (let g=0; g<words.length; g++) {
+                let guess = words[g];
+                scores.ent[g] = calculateGuessEntropy(word_index.get(guess), fw, feedback_matrix, fwi, ent_table);
+                scores.pfh[g] = pfHeuristicScore(guess, pf);
             }
 
-            log(scores.pfh);
-
-            scores.ent = normalise(scores.ent);
             scores.pfh = normalise(scores.pfh);
-            scores.unh = normalise(scores.unh);
 
-            log(scores.pfh);
+            let ew =  0.7361;
+            let pw = 13.5323;
+            let cw =  6.8423;
+            if (opt.weights !== undefined && opt.weights.mc !== undefined) {
+                mc = opt.weights.mc;
+                ec = opt.weights.ec;
+
+                if (fw.length <= ec) {
+                    ew = opt.weights.ew[2];
+                    pw = opt.weights.pw[2];
+                    cw = opt.weights.cw[2];
+                } else if (fw.length <= mc) {
+                    ew = opt.weights.ew[1];
+                    pw = opt.weights.pw[1];
+                    cw = opt.weights.cw[1];
+                } else {
+                    ew = opt.weights.ew[0];
+                    pw = opt.weights.pw[0];
+                    cw = opt.weights.cw[0];
+                }
+            } else if (opt.weights !== undefined) {
+                ew = opt.weights.ew;
+                pw = opt.weights.pw;
+                cw = opt.weights.cw;
+            }
 
             for (let i=0; i<words.length; i++) {
-                let score  = scores.ent[i] * w.ent;
-                    score += scores.pfh[i] * w.pfh;
-                    score += scores.unh[i] * w.unh;
-                    score += 0.01 * Math.random();
+                const s = new Array(4).fill(0);
+
+                s[0] = scores.pfh[i] * pw;
+                s[1] = (1 - Math.pow(2, -scores.ent[i])) * ew;
+                s[2] = (meetsConditions(words[i], cond) ? 1 : 0) * cw;
+                if (opt.rand !== undefined && opt.rand === true) {
+                    const rand = 0.001 * Math.random();
+                    s[3] = rand;
+                }
+
+                let score = s.reduce((acc, v) => acc + v, 0);
 
                 if (score > best_score) {
                     best_score = score;
                     best_guess = words[i];
                 }
             }
-        } else {
-            pf = calculatePosFreq(fw);
-            for (let guess of words) {
-                scores.ent.push(calculateGuessEntropy(guess, fw, feedback_matrix, word_index));
-                scores.pfh.push(pfHeuristicScore(guess, pf));
-                scores.unh.push(uniquenessHeuristicScore(guess));
-            }
-
-            scores.ent = normalise(scores.ent);
-            scores.pfh = normalise(scores.pfh);
-            scores.unh = normalise(scores.unh);
-
-            for (let i=0; i<fw.length; i++) {
-                let score  = scores.ent[i] * w.ent;
-                    score += scores.pfh[i] * w.pfh;
-                    score += scores.unh[i] * w.unh;
-                    score += 0.01 * Math.random();
-
-                if (score > best_score) {
-                    best_score = score;
-                    best_guess = fw[i];
-                }
-            }
         }
+        guesses += 1;
 
         // Guess
         log(`Possible Words Left: ${fw.length}\n`);
         word_numbers.push(fw.length);
+        log(`Best Guess ${guesses}: ${best_guess}`);
         if (fw.length < 50) {
-            log(`Best Guess ${guesses+1}: ${best_guess}`);
-            log(`Other Guesses ${guesses+1}: ${fw}`);
-        } else {
-            log(`Best Guess ${guesses+1}: ${best_guess}`);
+            log(`Other Guesses ${guesses}: ${fw}`);
         }
-        guesses += 1;
         
         // Input
         let green, yellow, grey;
@@ -162,7 +166,7 @@ async function solve(opt) {
         
         // Filter
         const filtered_words = [];
-        const cond = [...conditions].map((e) => e)
+        cond = [...conditions].map((e) => e)
         for (let word of fw) {
             if (meetsConditions(word, cond)) {
                 filtered_words.push(word)
@@ -171,27 +175,19 @@ async function solve(opt) {
 
         fw = filtered_words;
 
-        if (fw.length === 0 || guesses > 6) {
-            log("ERROR: No Correct Word Could Be Found");
+        if (guesses > 6) {
+            log("Couldn't Solve in 6 guesses");
             return { solved: false };
-        } 
-        
-        if (fw.length === 1) {
+        } else if (green === best_guess) {
             log(`Solution: ${filtered_words}`);
             log(`Guess ${guesses} - Yippeee!`);
             log(`Word Numbers By Guess: ${word_numbers}`);
             return { solved: true, answer: filtered_words[0], guesses: guesses, word_count: word_numbers };
+        } else if (fw.length === 0) {
+            log("ERROR: No Correct Word Could Be Found");
+            return { solved: false };
         }
     }
-}
-
-function weights (progress) {
-    let p = progress * 10
-    return {
-        ent: 30 - 2 * p,
-        pfh: 0.3 * p,
-        unh: 3 - 0.3 * p
-    };
 }
 
 module.exports = { solve }

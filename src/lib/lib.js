@@ -40,14 +40,14 @@ function calcGradient(x1, x2, y1, y2) {
  */
 function feedback(guess, answer) {
     const wl = guess.length;
-    const green  = new Array(5).fill('.');
-    const yellow = ['.', '.', '.', '.', '.'];
-    const grey   = ['.', '.', '.', '.', '.'];
+    const green  = new Array(wl).fill('.');
+    const yellow = new Array(5).fill('.');
+    const grey   = new Array(5).fill('.');
 
     const counts = {};
 
     // Greens
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < wl; i++) {
         if (guess[i] === answer[i]) {
             green[i] = guess[i];
         } else {
@@ -122,4 +122,8 @@ function randomInt(max) {
   return Math.floor(Math.random() * max);
 }
 
-module.exports = { ask, count, calcGradient, feedback, meetsConditions, normalise, randomInt }
+function randomUniform(min, max) {
+    return min + Math.random() * (max - min);
+}
+
+module.exports = { ask, count, calcGradient, feedback, meetsConditions, normalise, randomInt, randomUniform }

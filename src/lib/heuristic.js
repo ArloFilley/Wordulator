@@ -18,7 +18,7 @@ function calculatePosFreq(words) {
     }
 
     for (let i=0; i < wl; i++) {
-        pf[i] = normalise(pf[i]).map(v => v + 0.2)
+        pf[i] = normalise(pf[i]);
     }
 
     return pf;
@@ -38,11 +38,11 @@ function pfHeuristicScore(word, pf) {
     for (let i=0; i < wl; i++) {
         let char_code = word.charCodeAt(i) - 97;
         if (seen[char_code] === 0) {
-            const s = pf[i][char_code];
-            score += s / 2;
-        } else {
             score += pf[i][char_code];
             seen[char_code] = 1;
+        } else {
+            const s = pf[i][char_code];
+            score += s / 2;
         }
     }
 
@@ -57,7 +57,7 @@ function pfHeuristicScore(word, pf) {
 function uniquenessHeuristicScore(word) {
     let score = 0;
     const seen = new Set();
-    for (const i in word) {
+    for (let i=0; i<word.length; i++) {
         let c = word[i];
         if (!seen.has(c)) {
             score += 1;

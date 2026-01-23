@@ -1,8 +1,9 @@
 /** Precompute an array of high score & entropy guesses */
 const fs = require('fs');
 
-const { calculateGuessEntropy } = require('../lib/entropy.js');
-const { pfHeuristicScore } = require('../lib/heuristic.js');
+const { calculateGuessEntropy, genEntropyTable } = require('../lib/entropy.js');
+const { pfHeuristicScore, uniquenessHeuristicScore } = require('../lib/heuristic.js');
+const { normalise } = require('../lib/lib.js')
 
 
 try {
@@ -14,16 +15,31 @@ try {
     const write_dir            = fs.existsSync(args[4]) ? args[4]                   : () => { throw "Feedback Matrix File Not Found" };
 
     const pos_freq = JSON.parse(fs.readFileSync(pos_freq_file));
-    // const feedback_matrix = new Uint8Array(fs.readFileSync(feedback_matrix_file));
+    const feedback_matrix = new Uint8Array(fs.readFileSync(feedback_matrix_file));
+    /** @type string[] */
     const words = JSON.parse(fs.readFileSync(words_file));
     const word_index = new Map();
     words.forEach((w, i) => word_index.set(w, i));
+    const word_indecies = words.map((_, i) => i)
 
-    let scores = new Array(words.length);
-    for (let g in words) {
-        const guess = words[g];
-        const s = pfHeuristicScore(guess, pos_freq);
-        scores[g] = { word: guess, score: s };  
+    let scores = Array.from({ length: words.length }, () => ({ word: '', score: 0 }));
+    let ent_scores = new Array(words.length);
+    let frq_scores = new Array(words.length);
+    let unq_scores = new Array(words.length);
+    const ent_table = genEntropyTable(words.length);
+    for (let i=0; i<words.length; i++) {
+        const guess = words[i];
+        scores[i].word = guess;
+        ent_scores[i] = calculateGuessEntropy(word_index.get(guess), words, feedback_matrix, word_indecies, ent_table);  
+        frq_scores[i] = pfHeuristicScore(guess, pos_freq);
+        unq_scores[i] = uniquenessHeuristicScore(guess) < 5 ? 0 : 1;
+    }
+
+    ent_scores = normalise(ent_scores);
+    frq_scores = normalise(frq_scores);
+    
+    for (let i=0; i<words.length; i++) {
+        scores[i].score = (ent_scores[i] * 5 + frq_scores[i] * 0.7) * unq_scores[i];
     }
 
     scores.sort((a, b) => b.score - a.score);

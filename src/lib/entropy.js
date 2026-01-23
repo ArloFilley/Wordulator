@@ -1,27 +1,39 @@
-const buckets = new Uint16Array(243);
+const buckets = new Uint16Array(243).fill(0);
 /**
  * @param {number} guess_index
- * @param {Array<string>} words 
+ * @param {Array<string>} word_list 
  * @param {UInt8Array} feedback_matrix 
- * @param {Map<string, number>} word_index 
+ * @param {number[]} word_index 
  * @returns Number
  */
-function calculateGuessEntropy(guess_index, words, feedback_matrix, word_index) {
-    const wl = words.length;
+function calculateGuessEntropy(guess_index, word_list, feedback_matrix, word_index, ent_table) {
+    buckets.fill(0);
+    const wl = word_list.length;
     const base = guess_index*wl;
 
     for (let ai=0; ai < wl; ai++) {
-        const pattern = feedback_matrix[base + word_index[ai]];
-        buckets[pattern]++;
+        pattern = feedback_matrix[base + word_index[ai]];
+        buckets[pattern] += 1;
+    }
+
+    let empty = 0;
+    for (let i = 0; i < 243; i++) { 
+        if (buckets[i] === 0) empty++;
     }
 
     let entropy = 0;
-    const ent_table = new Array();
-    for (let i = 0; i < 243; i++) {
-        const count = buckets[i];
-        if (count === 0) continue;
-        const p = count / wl;
-        entropy -= p * Math.log2(p);
+    if (ent_table !== undefined) {
+        for (let i = 0; i < 243; i++) {
+            const count = buckets[i];
+            entropy += ent_table[count];
+        }
+    } else {
+        for (let i = 0; i < 243; i++) {
+            const count = buckets[i];
+            if (count === 0) continue;
+            const p = count / wl;
+            entropy -= p * Math.log2(p);
+        }
     }
 
     return entropy;
@@ -72,4 +84,20 @@ function entropyFeedback(guess, answer) {
     return result
 }
 
-module.exports = { calculateGuessEntropy, encodePattern, entropyFeedback };
+/**
+ * 
+ * @param {number} length 
+ * @returns 
+ */
+function genEntropyTable(length) {
+    const table = new Float64Array(length + 1);
+
+    for (let c = 1; c <= length; c++) {
+        const p = c / length;
+        table[c] = -p * Math.log2(p);
+    }
+
+    return table;
+}
+
+module.exports = { calculateGuessEntropy, encodePattern, entropyFeedback, genEntropyTable };
