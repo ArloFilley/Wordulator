@@ -2,22 +2,21 @@ const { normalise } = require('./lib.js')
 
 /**
  * Calculates the positional frequencies of letters based on a list of words
- * @param {Array<Array<string>>} words 
+ * @param {Array<string>} words 
  * @returns 
  */
 function calculatePosFreq(words) {
-    const wl = words[0].length;
-    const pf = Array.from({length: wl}, () => new Array(26).fill(0));
+    const pf = Array.from({length: 5}, () => new Array(26).fill(0));
 
     for (let i=0; i < words.length; i++) {
         const word = words[i];
-        for (let j=0; j < wl; j++) {
+        for (let j=0; j < 5; j++) {
             const char_code = word.charCodeAt(j) - 97;
             pf[j][char_code] += 1;
         }
     }
 
-    for (let i=0; i < wl; i++) {
+    for (let i=0; i < 5; i++) {
         pf[i] = normalise(pf[i]);
     }
 

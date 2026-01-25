@@ -6,13 +6,18 @@
   "scripts": {
     "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",
     "bench": "node ./src/benchmark.js",
-    "gen-valid-words"     : "node src/pre/filter_words.js        data/raw/wordle.txt      data/filter 5",
-    "gen-pos-freq"        : "node ./src/pre/pos_freq.js          data/filter/words.json   data/proc",
-    "gen-feedback-matrix" : "node ./src/pre/feedback_matrix.js   data/filter/words.json   data/proc",
-    "gen-first-guesses"   : "node ./src/pre/first_guess.js       data/filter/words.json   data/proc/pos_freq.json        data/proc/feedback_matrix.bin  500  data/proc",
-    "gen-second-guesses"  : "node ./src/pre/second_guesses.js",
-    "gen-tests"           : "node ./src/pre/test.js              data/filter/words.json   data/test 5000"
+    "gen-valid-words": "node src/pre/filter_words.js        data/raw/og_solutions.txt data/filter 5",
+    "gen-pos-freq": "node ./src/pre/pos_freq.js          data/filter/words.json   data/proc",
+    "gen-feedback-matrix": "node ./src/pre/feedback_matrix.js   data/filter/words.json   data/proc",
+    "gen-first-guesses": "node ./src/pre/first_guess.js       data/filter/words.json   data/proc/pos_freq.json        data/proc/feedback_matrix.bin  50  data/proc",
+    "gen-second-guesses": "node ./src/pre/second_guesses.js",
+    "gen-tests": "node ./src/pre/test.js data/filter/solution_words.json data/test 5000"
   },
   "author": "Arlo Filley",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@luminati-io/mmap-io": "^1.1.7-lum.6",
+    "i": "^0.3.7",
+    "npm": "^11.8.0"
+  }
 }

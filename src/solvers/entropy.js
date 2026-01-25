@@ -1,10 +1,10 @@
 const fs = require('fs')
 
-const { ask, count, feedback, meetsConditions, randomInt } = require('../lib/lib.js');
-const { calculateGuessEntropy } = require('../lib/entropy.js');
+const { ask, count, feedback, meetsConditions } = require('../lib/lib.js');
+const { calculateGuessEntropy, loadFeedbackMatrix } = require('../lib/entropy.js');
 
 let words = require('../../data/filter/words.json');
-const feedback_matrix = new Uint8Array(fs.readFileSync('./data/proc/feedback_matrix.bin'));
+const feedback_matrix = loadFeedbackMatrix('./data/proc/feedback_matrix.bin');
 const first_guesses = require('../../data/proc/first_guesses.json');
 const word_index = new Map()
 words.forEach((w, i) => word_index.set(w, i))

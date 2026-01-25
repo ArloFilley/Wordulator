@@ -6,14 +6,14 @@ let { randomInt, randomUniform } = require('./src/lib/lib.js')
 
 let words = require('./data/filter/words.json');
 let test_data = require('./data/test/tests.json')
-let pre_weights = require("./data/proc/optimised_end_weights.json")
+let pre_weights = require("./data/weights/optimised_phases.json")
 
 
 main();
 async function main() {
     try {
         const args          = process.argv.slice(2);
-        const solver        = typeof(args[0]) === 'string'  ? args[0] : () => { throw "No solver selected" };
+        const solver        = typeof(args[0]) === 'string'  ? args[0] : 'combo';
         const type          = typeof(args[1]) === 'string'  ? args[1] : 'user';
         const num           = args[2] > 0                   ? Number.parseInt(args[2]) : 100;
         const num2          = args[3] > 0                   ? Number.parseInt(args[3]) : 100;
@@ -30,11 +30,11 @@ async function main() {
         }
 
         switch (type) {
-            case 'bench'     : await benchmark(solve, num, pre_weights, test_data, console.log);            break;
-            case 'benchmark' : await benchmark(solve, num, pre_weights, test_data, console.log);            break;
-            case 'wt'        : await weight_test(solve, num, num2);                                           break;
-            case 'wtest'     : await weight_test(solve, num, num2);                                         break;
-            case 'user'      : await solve({ type: "user", weights: pre_weights, rand: true, log: true });  break;
+            case 'bench'     : await benchmark(solve, num, pre_weights, test_data, console.log);                  break;
+            case 'benchmark' : await benchmark(solve, num, pre_weights, test_data, console.log);                  break;
+            case 'wt'        : await weight_test(solve, num, num2);                                               break;
+            case 'weight'    : await weight_test(solve, num, num2);                                               break;
+            case 'user'      : await solve({ type: "user", weights: pre_weights, rand: true, log: console.log }); break;
             default: throw `Invalid Mode Selected ${type}`
         }
     
@@ -79,9 +79,9 @@ async function benchmark(solve, benchmark_num = 100, weights, tests , log) {
             total_guesses += 8;
         }
 
-        if (i % 20 === 0 && result.solved) {
+        if (/*i % 20 === 0 &&*/ result.solved) {
             log(`Solved ${correct}/${i+1} | guesses:  ${result.guesses} | accuracy ${(correct / (i+1) * 100).toFixed(1)} | running avg: ${avg.toFixed(2)}`);
-        } else if (i % 20 === 0) {
+        } else /*if (i % 20 === 0)*/ {
             log(`Solved ${correct}/${i+1} | guesses: >6 | accuracy ${(correct / (i+1) * 100).toFixed(1)} | running avg: ${avg.toFixed(2)}`);
         }
 
@@ -126,8 +126,8 @@ async function weight_test(solve, trials, evaluations) {
         let eu3 = randomUniform(-2, 1);
         let pu3 = randomUniform(0, 2);
         let cu3 = randomUniform(0, 2);
-        let mcu = 200;
-        let ecu = 25;
+        let ecu = randomInt(50);
+        let mcu = randomInt(2000) + ecu;
         
         // Beginning Weights
             // let ew1 = Math.pow(10, wu1);
@@ -138,12 +138,12 @@ async function weight_test(solve, trials, evaluations) {
             let cw1 =  1.60958;
 
         // Middle Weights
-            let ew2 = Math.pow(10, eu2);
-            let pw2 = Math.pow(10, pu2);
-            let cw2 = Math.pow(10, cu2);
-            // let ew2 =  0.03572;
-            // let pw2 = 27.22678;
-            // let cw2 = 93.23757;
+            // let ew2 = Math.pow(10, eu2);
+            // let pw2 = Math.pow(10, pu2);
+            // let cw2 = Math.pow(10, cu2);
+            let ew2 =  2.7381617530009610;
+            let pw2 =  0.8122231210111768;
+            let cw2 =  2.4475561226122657;
 
         // End Weights
             // let ew3 = Math.pow(10, eu3);
@@ -157,8 +157,7 @@ async function weight_test(solve, trials, evaluations) {
             ew: [ew1, ew2, ew3], 
             pw: [pw1, pw2, pw3], 
             cw: [cw1, cw2, cw3], 
-            mc: mcu, 
-            ec: ecu 
+            phases: [mcu, ecu]
         }
 
         // Evaluate
@@ -167,7 +166,7 @@ async function weight_test(solve, trials, evaluations) {
 
         // Keep the best result
         if (score < bestScore) {
-            console.log(`New Best Score - Avg:${score.toFixed(8)} - Avg Imp: ${bestScores.avg - result.avg} - Acc Dff: ${result.acc - bestScores.acc} | ew: ${ew2.toFixed(5)} pw: ${pw2.toFixed(5)} cw: ${cw2.toFixed(5)}`),
+            console.log(`New Best Score - Avg:${score.toFixed(8)} - Avg Imp: ${bestScores.avg - result.avg} - Acc Dff: ${result.acc - bestScores.acc} | ew: ${ew3.toFixed(5)} pw: ${pw3.toFixed(5)} cw: ${cw3.toFixed(5)}`),
             bestScore = score;
             bestScores = result;
             bestWeights = weights;
@@ -175,7 +174,7 @@ async function weight_test(solve, trials, evaluations) {
 
         console.log(`${t+1}/${trials} - ${(t+1)*evaluations}/${evaluations*trials}\n`, 
             `\t-> This Score ${result.avg.toFixed(6)} - ${result.acc.toFixed(4)} | ew: ${ew3.toFixed(5)} pw: ${pw3.toFixed(5)} cw: ${cw3.toFixed(5)}\n`,
-            `\t-> Best Score ${bestScores.avg.toFixed(6)} - ${bestScores.acc.toFixed(4)} | ew: ${bestWeights.ew[1].toFixed(5)} pw: ${bestWeights.pw[1].toFixed(5)} cw: ${bestWeights.cw[1].toFixed(5)}\n`
+            `\t-> Best Score ${bestScores.avg.toFixed(6)} - ${bestScores.acc.toFixed(4)} | ew: ${bestWeights.ew[2].toFixed(5)} pw: ${bestWeights.pw[2].toFixed(5)} cw: ${bestWeights.cw[2].toFixed(5)}\n`
         );
     }
 

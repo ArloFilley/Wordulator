@@ -1,15 +1,15 @@
 /** Precompute an array of high score & entropy guesses */
 const fs = require('fs');
 
-const { calculateGuessEntropy, genEntropyTable } = require('../lib/entropy.js');
+const { calculateGuessEntropy, genEntropyTable, loadFeedbackMatrix } = require('../lib/entropy.js');
 const words = require('../../data/filter/words.json')
-
+const answers = require('../../data/filter/solution_words.json')
+const feedback_matrix = loadFeedbackMatrix('./data/proc/feedback_matrix.bin');
 
 try {
-    const feedback_matrix = new Uint8Array(fs.readFileSync('./data/proc/feedback_matrix.bin'));
     const word_index = new Map();
     words.forEach((w, i) => word_index.set(w, i));
-    const word_indecies = words.map((_, i) => i);
+    const answer_indecies = answers.map(v => word_index.get(v));
 
     let fgi = word_index.get('tares')
     const ppw = Array.from({ length: 243 }, () => []);
@@ -29,7 +29,7 @@ try {
         let best_guess = -1;
 
         for (let gi = 0; gi < words.length; gi++) {
-            const ent = calculateGuessEntropy(gi, pw, feedback_matrix, word_indecies, ent_table);
+            const ent = calculateGuessEntropy(gi, words, feedback_matrix, answer_indecies, ent_table);
 
             if (ent > best_entropy) {
                 best_entropy = ent;

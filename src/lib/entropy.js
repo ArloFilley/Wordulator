@@ -3,16 +3,17 @@ const buckets = new Uint16Array(243).fill(0);
  * @param {number} guess_index
  * @param {Array<string>} word_list 
  * @param {UInt8Array} feedback_matrix 
- * @param {number[]} word_index 
+ * @param {number[]} answer_indecies 
+ * @param {Float64Array} ent_table 
  * @returns Number
  */
-function calculateGuessEntropy(guess_index, word_list, feedback_matrix, word_index, ent_table) {
+function calculateGuessEntropy(guess_index, word_list, feedback_matrix, answer_indecies, ent_table) {
     buckets.fill(0);
     const wl = word_list.length;
     const base = guess_index*wl;
 
     for (let ai=0; ai < wl; ai++) {
-        pattern = feedback_matrix[base + word_index[ai]];
+        const pattern = feedback_matrix[base + answer_indecies[ai]];
         buckets[pattern] += 1;
     }
 
@@ -35,7 +36,7 @@ function calculateGuessEntropy(guess_index, word_list, feedback_matrix, word_ind
 }
 
 /**
- * @param {string} pattern 
+ * @param {number} pattern 
  * @returns 
  */
 function encodePattern(pattern) {
@@ -82,7 +83,7 @@ function entropyFeedback(guess, answer) {
 /**
  * 
  * @param {number} length 
- * @returns 
+ * @returns {Float64Array}
  */
 function genEntropyTable(length) {
     const table = new Float64Array(length + 1);
@@ -95,4 +96,28 @@ function genEntropyTable(length) {
     return table;
 }
 
-module.exports = { calculateGuessEntropy, encodePattern, entropyFeedback, genEntropyTable };
+
+const mmap = require('@luminati-io/mmap-io');
+const fs = require('fs');
+
+/**
+ * Lazily maps the feedback matrix file and returns a Uint8Array view
+ */
+function loadFeedbackMatrix(path) {
+    const fd = fs.openSync(path, 'r');
+    const stats = fs.fstatSync(fd);
+
+    const buffer = mmap.map(
+        stats.size,
+        mmap.PROT_READ,
+        mmap.MAP_SHARED,
+        fd,
+        0
+    );
+
+    // Uint8Array view over the memory-mapped file
+    const feedbackMatrix = new Uint8Array(buffer.buffer, buffer.byteOffset, stats.size / 2);
+    return feedbackMatrix;
+}
+
+module.exports = { calculateGuessEntropy, encodePattern, entropyFeedback, genEntropyTable, loadFeedbackMatrix };
