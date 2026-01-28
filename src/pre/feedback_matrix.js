@@ -21,13 +21,14 @@ try {
             matrix[gi * wl + ai] = pattern;
         }
 
-        if (gi % 100 === 0) {
+        if (gi % 1000 === 0) {
             console.log(`Computed ${gi}/${words.length}`);
         }
     }
 
     fs.writeFileSync(`${write_file}`, matrix);
     console.log(`Feedback matrix written to ${write_file}`);
+    process.exit(0)
 } catch (err) {
     console.error(err);
 }

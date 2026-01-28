@@ -19,7 +19,8 @@ try {
     }
 
     fs.writeFileSync(`${write_file}`, JSON.stringify(test_words, null, 4));
-    console.log(`Tests Written to ${write_dir}/tests.json`);
+    console.log(`Tests Written to ${write_file}`);
+    process.exit(0);
 } catch (err) {
     console.error(err);
 }

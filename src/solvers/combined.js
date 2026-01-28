@@ -6,7 +6,7 @@ const { Wordle, patternFromUserInput } = require('../lib/wordle.js')
 
 // Load Required Data
 const words = require('../../data/filter/words.json');
-const answers = require('../../data/filter/solution_words.json');
+const answers = require('../../data/filter/solutions.json');
 const feedback_matrix = loadFeedbackMatrix('./data/proc/feedback_matrix.bin');
 const word_index = new Map();
 words.forEach((w, i) => word_index.set(w, i));

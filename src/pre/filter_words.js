@@ -28,9 +28,9 @@ try {
         if (word_is_valid) valid_words.push(word);
     }
 
-    console.log(`Found ${valid_words.length} Valid Words`);
     fs.writeFileSync(`${write_file}`, JSON.stringify(valid_words, null, 4));
     console.log(`Wrote ${valid_words.length} Valid Words to ${write_file}`);
+    process.exit(0)
 } catch (err) {
     console.error(err);
 }
