@@ -1,6 +1,4 @@
 let { solve : combinedSolver   } = require('./src/solvers/combined.js')
-let { solve : entropySolver    } = require('./src/solvers/entropy.js')
-let { solve : heuristicSolver  } = require('./src/solvers/heuristic.js')
 let { randomInt } = require('./src/lib/lib.js')
 
 let words = require('./data/filter/words.json');
@@ -10,20 +8,10 @@ main();
 async function main() {
     try {
         const args          = process.argv.slice(2);
-        const solver        = typeof(args[0]) === 'string'  ? args[0] : 'combo';
-        const type          = typeof(args[1]) === 'string'  ? args[1] : 'user';
-        const num           = args[2] > 0                   ? Number.parseInt(args[2]) : 100;
+        const type          = typeof(args[0]) === 'string'  ? args[1] : 'user';
+        const num           = args[1] > 0                   ? Number.parseInt(args[2]) : 100;
     
-        let solve;
-        switch (solver) {
-            case 'combo'     : solve = combinedSolver;    break;
-            case 'combined'  : solve = combinedSolver;    break;
-            case 'ent'       : solve = entropySolver;     break;
-            case 'entropy'   : solve = entropySolver;     break;
-            case 'heur'      : solve = heuristicSolver;   break;
-            case 'heuristic' : solve = heuristicSolver;   break;
-            default: throw `Invalid Solver Selected ${solver}`
-        }
+        let solve = combinedSolver;
 
         switch (type) {
             case 'bench'     : await benchmark(solve, num, test_data, console.log);                  break;
