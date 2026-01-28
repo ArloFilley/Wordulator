@@ -3,11 +3,10 @@ const fs = require('fs');
 
 const { entropyFeedback } = require('../lib/entropy.js');
 
-
 try {
     const args = process.argv.slice(2);
     const words_file = fs.existsSync(args[0]) ? args[0] : () => { throw "Words File Not Found" };
-    const write_dir  = fs.existsSync(args[1]) ? args[1] : () => { throw "Write Dir Not Found" };
+    const write_file  = args[1];
     
     const words = JSON.parse(fs.readFileSync(words_file));
     const matrix = new Uint8Array(words.length**2);
@@ -27,8 +26,8 @@ try {
         }
     }
 
-    fs.writeFileSync(`${write_dir}/feedback_matrix.bin`, matrix);
-    console.log(`Feedback matrix written to ${write_dir}/feedback_matrix.bin`);
+    fs.writeFileSync(`${write_file}`, matrix);
+    console.log(`Feedback matrix written to ${write_file}`);
 } catch (err) {
     console.error(err);
 }

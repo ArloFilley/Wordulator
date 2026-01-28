@@ -65,4 +65,40 @@ function uniquenessHeuristicScore(word) {
     return score;
 }
 
-module.exports = { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore }
+/**
+ * 
+ * @param {string} guess 
+ * @param {Array<boolean>} usedLetters
+ * @return {number}
+ */
+function overlapScore(guess, usedLetters) {
+    let score = 0;
+    for (let l=0; l<guess.length; l++) {
+        const letter_idx = guess.charCodeAt(l) - 97;
+        if (usedLetters[letter_idx] === false) {
+            score++;
+        }
+    }
+
+    return score
+}
+
+/**
+ * 
+ * @param {string} guess 
+ * @param {Array<boolean>} [usedLetters]
+ * @return {string}
+ */
+function createOverlap(guess, usedLetters) {
+    let uL = usedLetters;
+    if (usedLetters === undefined) uL = Array.from({ length: 26 }).fill(false);
+
+    for (let l=0; l<guess.length; l++) {
+        const letter_idx = guess.charCodeAt(l) - 97;
+        uL[letter_idx] = true;
+    }
+
+    return uL
+}
+
+module.exports = { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore, overlapScore, createOverlap }

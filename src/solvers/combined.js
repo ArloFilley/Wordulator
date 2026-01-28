@@ -1,16 +1,15 @@
-const fs = require('fs');
-
-const { calculatePosFreq, pfHeuristicScore: posFreqScore } = require('../lib/heuristic.js');
+// Lib Imports
+const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require('../lib/heuristic.js');
 const { calculateGuessEntropy: entropy_score, genEntropyTable, loadFeedbackMatrix }   = require('../lib/entropy.js');
-const { ask, normalise, patternToIndex } = require('../lib/lib.js');
+const { ask, normalise } = require('../lib/lib.js');
 const { Wordle, patternFromUserInput } = require('../lib/wordle.js')
 
+// Load Required Data
 const words = require('../../data/filter/words.json');
+const answers = require('../../data/filter/solution_words.json');
 const feedback_matrix = loadFeedbackMatrix('./data/proc/feedback_matrix.bin');
-const second_guesses = new Uint8Array(fs.readFileSync('./data/proc/second_guesses.bin'));
 const word_index = new Map();
 words.forEach((w, i) => word_index.set(w, i));
-
 
 async function solve(opt) {
     let log = opt.log;
@@ -25,58 +24,35 @@ async function solve(opt) {
     }
 
     // Guessing and scoring
-    let possible_words = words;
+    let possible_words = answers;
     let pos_frequencies;
     let previous_guess_feedback = null;
-    const scores = { entropy: new Array(words.length), pos_freq: new Array(words.length) }
-    let word_indecies = words.map((v, i) => i);
+    const scores = { entropy: new Array(words.length), pos_freq: new Array(words.length), overlap: new Array(words.length) }
+    let word_indecies = answers.map((v, i) => word_index.get(v));
+    let overlapBin = "";
 
     // Stats and tracking
     let guesses = 0;
     const word_numbers = []
 
-    // Weights
-    /** @type {number[]} */
-    let entropy_weights = [];
-    /** @type {number[]} */
-    let pos_frequency_weights = [];
-    /** @type {number[]} */
-    let possible_answer_weights = [];
-    /** @type {number[]} */
-    let phases = [];
-    if (opt.weights === undefined) {
-        entropy_weights.push(0.7361);
-        pos_frequency_weights.push(13.5323);
-        possible_answer_weights.push(6.8423);
-        phases.push(words.length);
-    } else if (opt.weights.phases === undefined) {
-        entropy_weights.push(words.length);
-        pos_frequency_weights.push(opt.weights.pw);
-        possible_answer_weights.push(opt.weights.cw);
-        phases.push(2000);
-    } else {
-        entropy_weights = opt.weights.ew;
-        pos_frequency_weights = opt.weights.pw;
-        possible_answer_weights = opt.weights.cw;
-        phases = opt.weights.phases;
-    }
-
     while (true) {
         // Strategize & Guess
+        let progress =  1 - (words.length - possible_words.length / words.length)
         let best_guess = '!@??*';
         let best_score = -Infinity;
 
-        if (guesses === 0) best_guess = 'dares'; // First guess is predefined based on entropy
-        else if (possible_words.length === 1) best_guess = possible_words[0];
-        else {
-            let phase = 0;
-            for (let i = 0; i < phases.length; i++) {
-                if (possible_words.length < phases[i]) phase = i;
-            }
-
-            const entropy_weight = entropy_weights[phase];
-            const pos_frequency_weight = pos_frequency_weights[phase];
-            const possible_answer_weight = possible_answer_weights[phase];
+        if (guesses === 0) {
+            best_guess = 'dares'; // First guess is predefined based on entropy
+            overlapBin = createOverlap('dares');
+        } else if (possible_words.length === 1) {
+            // Optimisation for When Only 1 Possible Guess is Left
+            best_guess = possible_words[0]; 
+        } else {
+            // Weights
+            const entropy_weight = 80;
+            const pos_frequency_weight = 8;
+            const possible_answer_weight = 400 * (progress ** 2);
+            const overlap_weight = 8 * -progress;
 
             pos_frequencies = calculatePosFreq(possible_words);
             word_indecies = word_indecies.filter(v => wordle.meetsConditions(words[v]));
@@ -86,26 +62,31 @@ async function solve(opt) {
                 let guess = words[g];
                 scores.entropy[g] = entropy_score(g, words, feedback_matrix, word_indecies, ent_table);
                 scores.pos_freq[g] = posFreqScore(guess, pos_frequencies);
+                scores.overlap[g] = overlapScore(guess, overlapBin);
             }
 
             scores.pos_freq = normalise(scores.pos_freq);
+            scores.overlap = normalise(scores.overlap);
 
             for (let guess = 0; guess < words.length; guess++) {
                 let score = 0;
                 score += (1 - Math.pow(2, -scores.entropy[guess])) * entropy_weight;
                 score += scores.pos_freq[guess] * pos_frequency_weight;
+                score += scores.overlap[guess] * overlap_weight;
                 if (wordle.meetsConditions(words[guess])) {
                     score += 1 * possible_answer_weight;
                 }
                 if (opt.rand !== undefined && opt.rand === true) {
                     score += 0.001 * Math.random();
-                }            
+                }
 
                 if (score > best_score) {
                     best_score = score;
                     best_guess = words[guess];
                 }
             }
+
+            createOverlap(best_guess, overlapBin);
         }
         
         word_numbers.push(possible_words.length);

@@ -1,11 +1,10 @@
 /** Filters words down to a valid list based on a given length and preset character set */
 const fs = require('node:fs');
 
-
 try {
     const args = process.argv.slice(2);
     const read_file = fs.existsSync(args[0]) ? args[0] : () => { throw "Read File Not Found" };
-    const write_dir = fs.existsSync(args[1]) ? args[1] : () => { throw "Write Dir Not Found" };
+    const write_file = args[1];
     const desired_word_length = typeof(args[2]) === Number ? args[2] : 5;
 
     const data = fs.readFileSync(read_file, 'utf8');
@@ -30,8 +29,8 @@ try {
     }
 
     console.log(`Found ${valid_words.length} Valid Words`);
-    fs.writeFileSync(`${write_dir}/words.json`, JSON.stringify(valid_words, null, 4));
-    console.log(`Wrote ${valid_words.length} Valid Words to ${write_dir}/words.json`);
+    fs.writeFileSync(`${write_file}`, JSON.stringify(valid_words, null, 4));
+    console.log(`Wrote ${valid_words.length} Valid Words to ${write_file}`);
 } catch (err) {
     console.error(err);
 }
