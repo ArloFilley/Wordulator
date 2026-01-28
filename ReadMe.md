@@ -16,7 +16,7 @@ and implementing the Wordle ruleset!
 ## Installation
 - Clone repo
 - Navigate to `./` in terminal
-- Run `run/installation.bash` - and wait to finish
+- Run `npm run install-wordulator` - and wait to finish
   - Installs base Wordle solutions and guesses
   - Precomputes feedback matrix - This step might take a while
   - Creates 5000 benchmark test cases from the solution list
@@ -24,7 +24,7 @@ and implementing the Wordle ruleset!
 
 ### Usage
 - Run in **user** mode using `node .`
-- Run a standard **benchmark** using `run/benchmark.bash`
+- Run a standard **benchmark** using `npm run benchmark`
 - Run a custom **benchmark** using `node . combo bench (# of tests)`
 - Enjoy
 

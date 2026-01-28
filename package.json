@@ -6,13 +6,8 @@
   "scripts": {
     "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",
     "install-wordulator": "chmod u+x run/install.bash && run/install.bash && chmod u+x run/benchmark.bash",
-    "bench": "node ./src/benchmark.js",
-    "gen-valid-words": "node src/pre/filter_words.js        data/raw/og_solutions.txt data/filter 5",
-    "gen-pos-freq": "node ./src/pre/pos_freq.js          data/filter/words.json   data/proc",
-    "gen-feedback-matrix": "node ./src/pre/feedback_matrix.js   data/filter/words.json   data/proc",
-    "gen-first-guesses": "node ./src/pre/first_guess.js       data/filter/words.json   data/proc/pos_freq.json        data/proc/feedback_matrix.bin  50  data/proc",
-    "gen-second-guesses": "node ./src/pre/second_guesses.js",
-    "gen-tests": "node ./src/pre/test.js data/filter/solution_words.json data/test 5000"
+    "benchmark": "run/benchmark.bash",
+    "bench": "run/benchmark.bash"
   },
   "author": "Arlo Filley",
   "license": "ISC",

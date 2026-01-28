@@ -8,8 +8,8 @@ main();
 async function main() {
     try {
         const args          = process.argv.slice(2);
-        const type          = typeof(args[0]) === 'string'  ? args[1] : 'user';
-        const num           = args[1] > 0                   ? Number.parseInt(args[2]) : 100;
+        const type          = typeof(args[0]) === 'string'  ? args[0] : 'user';
+        const num           = args[1] > 0                   ? Number.parseInt(args[1]) : 100;
     
         let solve = combinedSolver;
 
