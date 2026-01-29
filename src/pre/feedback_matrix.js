@@ -28,7 +28,7 @@ try {
 
     fs.writeFileSync(`${write_file}`, matrix);
     console.log(`Feedback matrix written to ${write_file}`);
-    process.exit(0)
+    process.exit(0);
 } catch (err) {
     console.error(err);
 }

@@ -1,16 +1,25 @@
 {
   "name": "wordulator",
   "version": "1.0.0",
-  "description": "A Wordle Guessing Program",
+  "description": "An Entropy Based Wordle Solver",
+  "keywords": ["wordle", "entropy"],
+  "license": "MIT",
+  "author": "Arlo Filley",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArloFilley/Wordulator"
+  },
+  "type": "commonjs",
   "main": "main.js",
+  "bin": {
+    "wordulator": "node ./main.js"
+  },
   "scripts": {
     "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",
     "install-wordulator": "chmod u+x run/install.bash && run/install.bash && chmod u+x run/benchmark.bash",
     "benchmark": "run/benchmark.bash",
     "bench": "run/benchmark.bash"
   },
-  "author": "Arlo Filley",
-  "license": "ISC",
   "dependencies": {
     "@luminati-io/mmap-io": "^1.1.7-lum.6",
     "i": "^0.3.7",

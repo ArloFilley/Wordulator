@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 let { solve : combinedSolver   } = require('./src/solvers/combined.js')
 let { randomInt } = require('./src/lib/lib.js')
 

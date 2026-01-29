@@ -30,7 +30,7 @@ try {
 
     fs.writeFileSync(`${write_file}`, JSON.stringify(valid_words, null, 4));
     console.log(`Wrote ${valid_words.length} Valid Words to ${write_file}`);
-    process.exit(0)
+    process.exit(0);
 } catch (err) {
     console.error(err);
 }
