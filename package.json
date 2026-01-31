@@ -1,8 +1,11 @@
 {
   "name": "wordulator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An Entropy Based Wordle Solver",
-  "keywords": ["wordle", "entropy"],
+  "keywords": [
+    "wordle",
+    "entropy"
+  ],
   "license": "MIT",
   "author": "Arlo Filley",
   "repository": {
@@ -12,7 +15,7 @@
   "type": "commonjs",
   "main": "main.js",
   "bin": {
-    "wordulator": "node ./main.js"
+    "wordulator": "main.js"
   },
   "scripts": {
     "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",

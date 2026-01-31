@@ -1,13 +1,16 @@
+// NodeJS Imports
+const path = require('path');
+
 // Lib Imports
-const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require('../lib/heuristic.js');
-const { calculateGuessEntropy: entropy_score, genEntropyTable, loadFeedbackMatrix }   = require('../lib/entropy.js');
-const { ask, normalise } = require('../lib/lib.js');
-const { Wordle, patternFromUserInput } = require('../lib/wordle.js')
+const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require(path.join(__dirname, '../lib/heuristic.js'));
+const { calculateGuessEntropy: entropy_score, genEntropyTable, loadFeedbackMatrix } = require(path.join(__dirname, '../lib/entropy.js'));
+const { ask, normalise } = require(path.join(__dirname, '../lib/lib.js'));
+const { Wordle, patternFromUserInput } = require(path.join(__dirname, '../lib/wordle.js'));
 
 // Load Required Data
-const words = require('../../data/filter/words.json');
-const answers = require('../../data/filter/solutions.json');
-const feedback_matrix = loadFeedbackMatrix('./data/proc/feedback_matrix.bin');
+const words = require(path.join(__dirname, '../../data/filter/words.json'));
+const answers = require(path.join(__dirname, '../../data/filter/solutions.json'));
+const feedback_matrix = loadFeedbackMatrix(path.join(__dirname, '../../data/proc/feedback_matrix.bin'));
 const word_index = new Map();
 words.forEach((w, i) => word_index.set(w, i));
 

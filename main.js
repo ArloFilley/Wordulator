@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-let { solve : combinedSolver   } = require('./src/solvers/combined.js')
-let { randomInt } = require('./src/lib/lib.js')
+const path = require('path');
 
-let words = require('./data/filter/words.json');
-let test_data = require('./data/test/tests.json')
+let { solve : combinedSolver   } = require(path.join(__dirname, 'src/solvers/combined.js'));
+let { randomInt } = require(path.join(__dirname, 'src/lib/lib.js'))
+
+let words = require(path.join(__dirname, 'data/filter/words.json'));
+let test_data = require(path.join(__dirname, 'data/test/tests.json'))
 
 main();
 async function main() {
@@ -16,8 +18,8 @@ async function main() {
         let solve = combinedSolver;
 
         switch (type) {
-            case 'bench'     : await benchmark(solve, num, test_data, console.log);                  break;
-            case 'benchmark' : await benchmark(solve, num, test_data, console.log);                  break;                                          break;
+            case 'bench'     : await benchmark(solve, num, test_data, console.log); break;
+            case 'benchmark' : await benchmark(solve, num, test_data, console.log); break;                                       
             case 'user'      : await solve({ type: "user", rand: true, log: console.log }); break;
             default: throw `Invalid Mode Selected ${type}`
         }
