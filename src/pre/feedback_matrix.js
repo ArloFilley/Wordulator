@@ -1,7 +1,8 @@
 /** Precomputes a frequency matrix for a given set of words */
 const fs = require('fs');
+const path = require('path')
 
-const { entropyFeedback } = require('../lib/entropy.js');
+const { entropyFeedback } = require(path.join(__dirname, '../lib/entropy.js'));
 
 try {
     const args = process.argv.slice(2);

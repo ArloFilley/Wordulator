@@ -1,8 +1,8 @@
 /** Precomuputes Frequencies of Letters in Words */
-const fs = require('node:fs');
+const fs = require('fs');
+const path = require('path');
 
-const { randomInt } = require('../lib/lib.js')
-
+const { randomInt } = require(path.join(__dirname, '../lib/lib.js'));
 
 try {
     const args = process.argv.slice(2);

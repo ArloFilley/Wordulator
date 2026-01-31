@@ -1,8 +1,4 @@
 #!/bin/bash
-echo "installing node modules"
-npm i
-wait
-sleep 5
 
 echo "Creating Directory Structure"
 sleep 0.2

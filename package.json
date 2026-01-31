@@ -21,7 +21,8 @@
     "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",
     "install-wordulator": "chmod u+x run/install.bash && run/install.bash && chmod u+x run/benchmark.bash",
     "benchmark": "run/benchmark.bash",
-    "bench": "run/benchmark.bash"
+    "bench": "run/benchmark.bash",
+    "postinstall": "scripts/postinstall.js"
   },
   "dependencies": {
     "@luminati-io/mmap-io": "^1.1.7-lum.6",

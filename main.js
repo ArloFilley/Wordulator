@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+// NodeJS Imports
 const path = require('path');
 
 let { solve : combinedSolver   } = require(path.join(__dirname, 'src/solvers/combined.js'));
@@ -82,5 +83,4 @@ async function benchmark(solve, benchmark_num = 100, tests, log) {
             log(`\t${i+1} guesses - ${no_of_guesses[i]}`);
         }
     }
-
 }

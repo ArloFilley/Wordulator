@@ -1,5 +1,5 @@
 /** Filters words down to a valid list based on a given length and preset character set */
-const fs = require('node:fs');
+const fs = require('fs');
 
 try {
     const args = process.argv.slice(2);
