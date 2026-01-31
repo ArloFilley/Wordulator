@@ -14,18 +14,15 @@ or optimal. It was however an interesting dive into entropy, bitwise optimisatio
 and implementing the Wordle ruleset!
 
 ## Installation
-- Clone repo
-- Navigate to `./` in terminal
-- Run `npm run install-wordulator` - and wait to finish
+- Run `npm install -g wordulator` - and wait to finish
   - Installs base Wordle solutions and guesses
   - Precomputes feedback matrix - This step might take a while
   - Creates 5000 benchmark test cases from the solution list
 - All Done
 
 ### Usage
-- Run in **user** mode using `node .`
-- Run a standard **benchmark** using `npm run benchmark`
-- Run a custom **benchmark** using `node . combo bench (# of tests)`
+- Run in **user** mode using `wordulator`
+- Run a standard **benchmark** using `wordulator bench (# of tests)`
 - Enjoy
 
 ### Example Usage
