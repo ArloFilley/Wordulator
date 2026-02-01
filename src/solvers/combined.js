@@ -113,18 +113,35 @@ async function solve(opt) {
             previous_guess_feedback = feedback;
             wordle.updateConditions(best_guess, feedback);
         } else if (opt.type === 'user') {
-            best_guess   = await ask("What Word Did You Guess: ");
+            let guess   = await ask("What Word Did You Guess: ");
+            if (guess.length !== 5) { guess = best_guess }
             const green  = await ask("Green Letters  - Use '.' for any blanks: ");
+            if (guess === green) {
+                log(`Solution: ${best_guess}`);
+                log(`Guess ${guesses} - Yippeee!`);
+                log(`Word Numbers By Guess: ${word_numbers}`);
+                return { solved: true, answer: best_guess, guesses: guesses, word_count: word_numbers };
+            }
+
             const yellow = await ask("Yellow Letters - Use '.' for any blanks: ");
+            
             
             const feedback = patternFromUserInput(green, yellow);
             previous_guess_feedback = feedback;
-            wordle.updateConditions(best_guess, feedback);
+            wordle.updateConditions(guess, feedback);
         } else if (opt.type === 'web') {
             const data = await once(app_events, 'web.guess');
             const guess = data[0].guess;
+            if (guess.length !== 5) { guess = best_guess }
             const green = data[0].green;
             const yellow = data[0].yellow;
+
+            if (guess === green) {
+                log(`Solution: ${best_guess}`);
+                log(`Guess ${guesses} - Yippeee!`);
+                log(`Word Numbers By Guess: ${word_numbers}`);
+                return { solved: true, answer: best_guess, guesses: guesses, word_count: word_numbers };
+            }
 
             console.log(`Web Guess Recieved\n${guess}\n${green}\n${yellow}`);
 

@@ -5,7 +5,7 @@
 **If so then this is the repository you've been looking for!**
 
 This is a Node.js implementation of a Wordle guessing bot. Uses entropy and several
-heuristics to average 3.83 guesses per answer with 99% accuracy! *Tested over 
+heuristics to average 3.77 guesses per answer with 100% accuracy! *Tested over 
 100 different cases, accuracy is defined as getting the answer within the 6 allowed
 guesses*
 
