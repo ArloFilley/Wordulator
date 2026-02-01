@@ -1,4 +1,5 @@
 const readline = require('node:readline/promises');
+const { once } = require('events')
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -59,7 +60,5 @@ function randomInt(max) {
 function randomUniform(min, max) {
     return min + Math.random() * (max - min);
 }
-
-
 
 module.exports = { ask, count, normalise, patternToIndex, randomInt, randomUniform }

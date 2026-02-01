@@ -1,11 +1,16 @@
 // NodeJS Imports
 const path = require('path');
+const { once } = require('events');
+
+// Shared App State
+let current_best_guess = null;
 
 // Lib Imports
 const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require(path.join(__dirname, '../lib/heuristic.js'));
 const { calculateGuessEntropy: entropy_score, genEntropyTable, loadFeedbackMatrix } = require(path.join(__dirname, '../lib/entropy.js'));
 const { ask, normalise } = require(path.join(__dirname, '../lib/lib.js'));
 const { Wordle, patternFromUserInput } = require(path.join(__dirname, '../lib/wordle.js'));
+const app_events = require(path.join(__dirname, '../lib/events.js'));
 
 // Load Required Data
 const words = require(path.join(__dirname, '../../data/filter/words.json'));
@@ -40,7 +45,7 @@ async function solve(opt) {
 
     while (true) {
         // Strategize & Guess
-        let progress =  1 - (words.length - possible_words.length / words.length)
+        let progress =  1 - (possible_words.length / words.length);
         let best_guess = '!@??*';
         let best_score = -Infinity;
 
@@ -89,7 +94,7 @@ async function solve(opt) {
                 }
             }
 
-            createOverlap(best_guess, overlapBin);
+            overlapBin = createOverlap(best_guess, overlapBin);
         }
         
         word_numbers.push(possible_words.length);
@@ -100,6 +105,7 @@ async function solve(opt) {
         if (possible_words.length < 50) {
             log(`Other Guesses ${guesses}: ${possible_words}`);
         }
+        current_best_guess = best_guess;
         
         // Feedback & Conditions updating
         if (opt.type === 'benchmark') {
@@ -111,6 +117,17 @@ async function solve(opt) {
             const green  = await ask("Green Letters  - Use '.' for any blanks: ");
             const yellow = await ask("Yellow Letters - Use '.' for any blanks: ");
             
+            const feedback = patternFromUserInput(green, yellow);
+            previous_guess_feedback = feedback;
+            wordle.updateConditions(best_guess, feedback);
+        } else if (opt.type === 'web') {
+            const data = await once(app_events, 'web.guess');
+            const guess = data[0].guess;
+            const green = data[0].green;
+            const yellow = data[0].yellow;
+
+            console.log(`Web Guess Recieved\n${guess}\n${green}\n${yellow}`);
+
             const feedback = patternFromUserInput(green, yellow);
             previous_guess_feedback = feedback;
             wordle.updateConditions(best_guess, feedback);
@@ -136,4 +153,12 @@ async function solve(opt) {
     }
 }
 
-module.exports = { solve }
+/**
+ * 
+ * @returns {String}
+ */
+function getCurrentBestGuess() {
+    return current_best_guess;
+}
+
+module.exports = { solve, getCurrentBestGuess }

@@ -3,9 +3,16 @@
 // NodeJS Imports
 const path = require('path');
 
-let { solve : combinedSolver   } = require(path.join(__dirname, 'src/solvers/combined.js'));
-let { randomInt } = require(path.join(__dirname, 'src/lib/lib.js'))
+// Internal Web Server Imports
+const webServer = require(path.join(__dirname, 'src/web/routes.js'));
 
+// Internal Library Imports
+let { solve : combinedSolver } = require(path.join(__dirname, 'src/solvers/combined.js'));
+let { randomInt } = require(path.join(__dirname, 'src/lib/lib.js'))
+const app_events = require(path.join(__dirname, 'src/lib/events.js'));
+exports.app_events = app_events;
+
+// Data Imports
 let words = require(path.join(__dirname, 'data/filter/words.json'));
 let test_data = require(path.join(__dirname, 'data/test/tests.json'))
 
@@ -22,6 +29,7 @@ async function main() {
             case 'bench'     : await benchmark(solve, num, test_data, console.log); break;
             case 'benchmark' : await benchmark(solve, num, test_data, console.log); break;                                       
             case 'user'      : await solve({ type: "user", rand: true, log: console.log }); break;
+            case 'web'       : webServer(); await solve({ type: "web", rand: false, log: console.log }); break;
             default: throw `Invalid Mode Selected ${type}`
         }
     
@@ -33,7 +41,6 @@ async function main() {
 }
 
 /**
- * 
  * @param {function} solve 
  * @param {num} benchmark_num 
  * @param {object} weights 
