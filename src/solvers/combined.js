@@ -146,7 +146,7 @@ function cull_bad_guesses(all_possible_guesses, possible_answers, wordle, overla
     const possible_answer_weight = 8 * progress; // 0 -> 8
     const separation_weight = 25 * progress; // 0 -> 25
 
-    let good_guesses = new Array();
+    let good_guesses = new Array(all_possible_guesses.length);
 
     // Calculate a cheap score for each guess
     // Use cheap scores to evaluate which guesses to use full entropy feedback
@@ -162,17 +162,17 @@ function cull_bad_guesses(all_possible_guesses, possible_answers, wordle, overla
 
         cheap_score = pf_score + overlap_score + possible_answer_score + pattern_diversity_score;
         
-        good_guesses.push({ 
+        good_guesses[g] = { 
             guess_index: g, guess_word: guess, 
             cheap_score, entropy_score: null, total_score: null
-        });
+        };
     }
 
     good_guesses.sort((a, b) => b.cheap_score - a.cheap_score);
 
-    if (answers_left > 20) good_guesses = good_guesses.splice(0, 100);
-    else {
-        good_guesses = good_guesses.splice(0, 100);
+    good_guesses = good_guesses.splice(0, 100);
+    if (answers_left >= 20) {
+        good_guesses = good_guesses.splice(0, answers_left * 2);
         for (let i = 0; i < good_guesses.length; i++) {
             const g = good_guesses[i].guess_index;
             good_guesses[i].cheap_score += separationScore(g, answer_indecies, fbm, fbm_stride) * separation_weight;

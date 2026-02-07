@@ -71,9 +71,9 @@ async function benchmark(solve, benchmark_num = 100, tests, log) {
             total_guesses += 8;
         }
 
-        if (/*i % 20 === 0 &&*/ result.solved) {
+        if (i % (benchmark_num / 100) === 0 && result.solved) {
             log(`Solved ${correct}/${i+1} | guesses:  ${result.guesses} | accuracy ${(correct / (i+1) * 100).toFixed(1)} | running avg: ${avg.toFixed(2)}`);
-        } else /*if (i % 20 === 0)*/ {
+        } else if (i % (benchmark_num / 100) === 0) {
             log(`Solved ${correct}/${i+1} | guesses: >6 | accuracy ${(correct / (i+1) * 100).toFixed(1)} | running avg: ${avg.toFixed(2)}`);
         }
 
