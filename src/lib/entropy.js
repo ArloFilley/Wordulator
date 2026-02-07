@@ -1,19 +1,17 @@
 const buckets = new Uint16Array(243).fill(0);
 /**
- * @param {number} guess_index
- * @param {Array<string>} word_list 
+ * @param {Number} guess_index
+ * @param {Number} fbm_stride 
  * @param {UInt8Array} feedback_matrix 
- * @param {number[]} answer_indecies 
+ * @param {Number[]} answer_indecies 
  * @param {Float64Array} ent_table 
  * @returns Number
  */
-function calculateGuessEntropy(guess_index, word_list, feedback_matrix, answer_indecies, ent_table) {
+function calculateGuessEntropy(guess_index, fbm_stride, feedback_matrix, answer_indecies, ent_table) {
     buckets.fill(0);
-    const wl = word_list.length;
-    const base = guess_index*wl;
 
-    for (let ai=0; ai < wl; ai++) {
-        const pattern = feedback_matrix[base + answer_indecies[ai]];
+    for (let ai=0; ai < answer_indecies.length; ai++) {
+        const pattern = feedback_matrix[guess_index * fbm_stride + answer_indecies[ai]];
         buckets[pattern] += 1;
     }
 
@@ -27,7 +25,7 @@ function calculateGuessEntropy(guess_index, word_list, feedback_matrix, answer_i
         for (let i = 0; i < 243; i++) {
             const count = buckets[i];
             if (count === 0) continue;
-            const p = count / wl;
+            const p = count / fbm_stride;
             entropy -= p * Math.log2(p);
         }
     }
@@ -96,6 +94,56 @@ function genEntropyTable(length) {
     return table;
 }
 
+/**
+ * 
+ * @param {String} guess 
+ * @param {String[]} possible_words 
+ * @returns {Number} score
+ */
+function separationScore(guess, possible_words, fbm, fbm_stride) {
+    let score = 0;
+
+    for (let i = 0; i < possible_words.length; i++) {
+        for (let j = i + 1; j < possible_words.length; j++) {
+            if (fbm[guess * fbm_stride + possible_words[i]] !== fbm[guess * fbm_stride + possible_words[j]]) {
+                score++;
+            }
+        }
+    }
+
+    return score;
+}
+
+/**
+ * Calculates the how many different feedback patterns the guess could generate
+ * based on the possible answers left
+ * @param {Number} guess 
+ * @param {Number[]} possible_words 
+ * @returns 
+ */
+function patternDiversityScore(guess, possible_words, fbm, fbm_stride) {
+    const seen = new Set();
+    for (let i = 0; i < possible_words.length; i++) {
+        const pattern = fbm[guess * fbm_stride + possible_words[i]];
+        seen.add(pattern);
+    }
+    return seen.size;
+}
+
+
+function minmaxScore(guess_index, fbm_stride, fbm, answer_indecies) {
+    buckets.fill(0);
+
+    for (let ai=0; ai < answer_indecies.length; ai++) {
+        const pattern = fbm[guess_index * fbm_stride + answer_indecies[ai]];
+        buckets[pattern] += 1;
+    }
+
+    const worst_bucket = Math.max(...buckets)
+
+    return worst_bucket;
+}
+
 
 const mmap = require('@luminati-io/mmap-io');
 const fs = require('fs');
@@ -120,4 +168,11 @@ function loadFeedbackMatrix(path) {
     return feedbackMatrix;
 }
 
-module.exports = { calculateGuessEntropy, encodePattern, entropyFeedback, genEntropyTable, loadFeedbackMatrix };
+module.exports = { 
+    calculateGuessEntropy, 
+    encodePattern, 
+    entropyFeedback,
+    genEntropyTable,
+    separationScore, patternDiversityScore, minmaxScore,
+    loadFeedbackMatrix 
+};
