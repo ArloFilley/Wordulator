@@ -90,3 +90,8 @@ This loop repeats steps 2-5 until:
 - a) There is only one possible answer, the solution
 - b) The program has used up its 6 guesses
 - c) There is no possible answer that meets the solution conditions
+
+# Credits
+Click Sound Effect - https://pixabay.com/sound-effects/film-special-effects-click-sound-432501/
+Win Sound Effect - https://pixabay.com/sound-effects/technology-correct-answer-toy-bi-bling-476370/ 
+Balloon Pop Sound Effect - https://pixabay.com/sound-effects/film-special-effects-party-balloon-pop-323588/
