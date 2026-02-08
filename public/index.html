@@ -8,55 +8,57 @@
     <script src="index.js" defer></script>
 </head>
 <body>
-    <h1>Hello Wordulators!</h1>
-    <h2 id="best-guess">Current Best Guess: DARES</h2>
-    <div id="wordle-grid" class="grid">
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
+    <div id="center">
+        <h1>Hello Wordulators!</h1>
+        <h2 id="best-guess">Current Best Guess: DARES</h2>
+        <div id="wordle-grid" class="grid center-container">
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+            </div>
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+            </div>
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+            </div>
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+            </div>
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+            </div>
+            <div class="row">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+            </div>
         </div>
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-        </div>
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-        </div>
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-        </div>
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-        </div>
-        <div class="row">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-            <input class="cell" type="text" maxlength="1" value="" data-state="0">
-        </div>
-    </div>
 
-    <button id="submit-row" onclick="sendRowFeedback()">Submit Guess</button>
+        <button id="submit-row" onclick="sendRowFeedback()">Submit Guess</button>
 
+        </div>
     </div>
 </body>
 </html>

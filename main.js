@@ -29,7 +29,7 @@ async function main() {
             case 'bench'     : await benchmark(solve, num, test_data, console.log); break;
             case 'benchmark' : await benchmark(solve, num, test_data, console.log); break;                                       
             case 'user'      : await solve({ type: "user", rand: true, log: console.log }); break;
-            case 'web'       : webServer(); await solve({ type: "web", rand: false, log: console.log }); break;
+            case 'web'       : webServer(); await solve({ type: "web", rand: false, log: () => {} }); break;
             default: throw `Invalid Mode Selected ${type}`
         }
     
