@@ -6,8 +6,11 @@
     <title>Worduloading...</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
     <script src="index.js" defer></script>
+    <script src="src/audio.js" defer></script>
+    <script src="src/celebrate.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
 </head>
-<body>
+<body class="center">
     <div id="center">
         <h1>Hello Wordulators!</h1>
         <h2 id="best-guess">Current Best Guess: DARES</h2>
@@ -56,8 +59,8 @@
             </div>
         </div>
 
-        <button id="submit-row" onclick="sendRowFeedback()">Submit Guess</button>
-
+        <div class="center">
+            <button id="submit-row" onclick="sendRowFeedback()">Submit Guess</button>
         </div>
     </div>
 </body>

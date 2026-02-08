@@ -7,91 +7,77 @@
     src: url(fonts/HeadingNow-Regular.ttf);
 }
 
-#wordle-grid { margin: 1%; }
-.row { margin: 1.5%; }
-.cell {
-    margin: 0px;
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
-    text-transform: uppercase;
-    background-color: #F8F8F8;
-    transition: background 0.2s;
-    border: none;
-    caret-color: transparent;
-}
-
-/* Cell Animation for Popping In When A Letter Is Typed */
-@keyframes cell-pop { 0% { transform: scale(1.25); } 100% { transform: scale(1);} }
-.cell-pop { 
-    animation: cell-pop 100ms ease-in-out 0s 1 normal both; 
-}
-
-
-.cell[data-state="0"] { background-color: #3A3A3C; color: #F8F8F8; } /* absent */
-.cell[data-state="1"] { background-color: #B59F3B; color: #F8F8F8; } /* present */
-.cell[data-state="2"] { background-color: #538D4E; color: #F8F8F8; } /* correct */
-
-.cell[data-active="0"] { /* Inactive Cells Should Look Transparent */
-    background-color: #121212; color: #F8F8F8;
-    -webkit-box-shadow:inset 0px 0px 0px 1px #3A3A3A;
-    -moz-box-shadow:inset 0px 0px 0px 1px #3A3A3A;
-    box-shadow:inset 0px 0px 0px 1px #3A3A3A;
-    cursor: default;
-} 
-.cell[data-active="1"] { /* Active Cells Should Be Obviously Interactable */
-    cursor: pointer;
-} 
-.cell[data-active="2"] { /* Set Cells Should Be Tell The User They Can't Be Interacted With */
-    cursor: default;
-} 
-
-input {
-    text-align: center;
-    font-family: wordle-letters;
-    cursor: default;
-}
-
-input:focus {
-    outline: none;
-    -webkit-box-shadow:inset 0px 0px 0px 1px #F8F8F8;
-    -moz-box-shadow:inset 0px 0px 0px 1px #F8F8F8;
-    box-shadow:inset 0px 0px 0px 1px #F8F8F8;
-}
-
 /** Dark Mode */
-body {
-    background-color: #121213;
-    color: #F8F8F8;
+body, button { background-color: #121213; color: #F8F8F8; }
+button { 
+    border: 2px solid #F8F8F8; border-radius: 8px;  
+    width: 40%; aspect-ratio: 8 / 3;
+    transition: border-radius 0.15s ease-in-out;
+}
+button:hover { 
+    border: 2px solid #00B5A3; border-radius: 12px; 
+    color: #00DAC4;
 }
 
-/** Center The Inputs */
-body {
+/** Center Everything */
+body { height: 100%; }
+.center {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
 }
 
-/** Disallow Selecting Anything Other Than Heading Text */
+/** Wordle Grid */
+#wordle-grid { margin-bottom: 20px; }
+.row { margin-bottom: 5px; } 
+.cell {
+    margin: 0.5px; width: 60px; aspect-ratio: 1 / 1;
+    font-size: 1.75rem; color: #F8F8F8; font-family: wordle-letters;
+    text-transform: uppercase; text-align: center;
+    cursor: default; caret-color: transparent;
+    
+    background-color: #121212;
+    border: 2px solid #3A3A3A; border-radius: 4px;
+    transition: background 0.15s ease-in-out;
+    transition: border 0.15s ease-in-out;
+}
+input:focus { outline: none; }
+
+/** Wordle State Coloring*/
+.cell[data-state="0"] { background-color: #3A3A3C; border-color: #3A3A3C; } /* absent */
+.cell[data-state="1"] { background-color: #B59F3B; border-color: #B59F3B; } /* present */
+.cell[data-state="2"] { background-color: #538D4E; border-color: #538D4E; } /* correct */
+
+/** Active */
+/* Inactive Cells Is The Default State Assumed ^ Set Above */
+.cell[data-active="1"] { cursor: pointer; } /* Active Cells */
+.cell[data-active="2"] { border-radius: 0px; } /* Set Cells */
+
+.cell:focus { border-color: #F8F8F8; } /* Currently Focused Cell */
+
+/** Popping Animation When Letter Typed */
+@keyframes cell-pop { 
+    0% { transform: scale(1); } 
+    30% { transform: scale(1.2); } 
+    100% { transform: scale(1); } 
+}
+.cell-pop { 
+    animation: cell-pop 200ms ease-in-out 0s 1 normal both; 
+}
+
+/** Disallow Selecting Except Headings */
 body {
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
 }
 
-h1 {
-    -webkit-user-select: text;
-    -ms-user-select: text;
-    user-select: text;
-}
-
-h2 {
+h1, h2 {
     -webkit-user-select: text;
     -ms-user-select: text;
     user-select: text;
 }
 
 /** Make Headings Use Correct Wordle Fonts */
-h1 { font-family: wordle-headings; font-weight: normal; }
-h2 { font-family: wordle-headings; font-weight: normal; }
+h1, h2, button { font-family: wordle-headings; font-weight: normal; }
+h1, h2 { text-align: center; }

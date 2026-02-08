@@ -4,41 +4,7 @@ const INACTIVE = 0;
 const ACTIVE = 1;
 const SET = 2;
 
-const audio = new AudioContext();
-let click_sfx;
-async function loadClick() {
-    const res = await fetch("/audio/click.mp3");
-    const array_buffer = await res.arrayBuffer();
-    click_sfx = await audio.decodeAudioData(array_buffer);
-}
 
-function playClick() {
-    const audio_source = audio.createBufferSource();
-    audio_source.buffer = click_sfx;
-
-    // High-pass filter
-    const highpass = audio.createBiquadFilter();
-    highpass.type = "highpass";
-    highpass.frequency.value = 300; // Hz
-
-    // Presence boost
-    const presence = audio.createBiquadFilter();
-    presence.type = "peaking";
-    presence.frequency.value = 50; // Hz
-    presence.Q.value = 0.1;
-    presence.gain.value = 75; // dB
-
-    // Gain 
-    const gain = audio.createGain();
-    gain.gain.value = 0.01;
-
-    audio_source
-        .connect(highpass)
-        .connect(presence)
-        .connect(gain)
-        .connect(audio.destination);
-    audio_source.start(0);
-}
 
 const click = new Audio("/audio/click.wav");
 click.volume = 1;
@@ -48,10 +14,10 @@ const best_guesses = new Array(6);
 let current_row = 0;
 
 window.addEventListener("load", () => {
-    loadClick();
+    loadSFX();
     document.querySelectorAll('.cell').forEach((cell, _index) => {
         cell.addEventListener("mousedown", e => {
-            e.preventDefault(); // stops focus before it happens
+            e.preventDefault(); // stops focus from clicking on cells
         });
 
         cell.addEventListener('click', () => {
@@ -71,7 +37,7 @@ window.addEventListener("load", () => {
             cell.addEventListener('input', () => {
                 // Pop Animation
                 cell.classList.add("cell-pop");
-                setTimeout(() => { cell.classList.remove("cell-pop") }, 100)
+                setTimeout(() => { cell.classList.remove("cell-pop") }, 200)
 
                 // Click Noise
                 playClick();
@@ -101,6 +67,7 @@ window.addEventListener("load", () => {
 });
 
 function getRowFeedback(rowIndex) {
+    let greens = 0;
     const rows = document.querySelectorAll('.row');
     const row = rows[rowIndex];
     const cells = row.querySelectorAll('.cell');
@@ -114,6 +81,7 @@ function getRowFeedback(rowIndex) {
         data.guess += cell.value;
         if (cell.dataset.state === GREEN) {
             data.green += cell.value;
+            greens += 1;
             data.yellow += '.';
         } else if (cell.dataset.state === YELLOW) {
             data.yellow += cell.value;
@@ -124,16 +92,23 @@ function getRowFeedback(rowIndex) {
         }
     });
 
-    return data;
+    return { is_solved: greens === cells.length, data };
 }
 
 function sendRowFeedback() {
-    const data = getRowFeedback(current_row);
+    const { is_solved, data } = getRowFeedback(current_row);
     fetch('/guess', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
+
+    if (is_solved) { 
+        setTimeout(customConfetti, 0); 
+        setTimeout(playWinSound, 200);
+        setTimeout(playBalloonPopSound, 10); 
+        return; 
+    }
 
     const rows = document.querySelectorAll('.row');
     
