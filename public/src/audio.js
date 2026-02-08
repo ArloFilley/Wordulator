@@ -1,18 +1,15 @@
 const audio = new AudioContext();
 let click_sfx, win_sfx, balloon_pop_sfx;
 async function loadSFX() {
-    fetch("/audio/click.wav").then(async (res) => {
-        const array_buffer = await res.arrayBuffer();
-        click_sfx = await audio.decodeAudioData(array_buffer);
-    });
-    fetch("/audio/win.mp3").then(async (res) => {
-        const array_buffer = await res.arrayBuffer();
-        win_sfx = await audio.decodeAudioData(array_buffer);
-    });
-    fetch("/audio/party-balloon-pop.mp3").then(async (res) => {
-        const array_buffer = await res.arrayBuffer();
-        balloon_pop_sfx = await audio.decodeAudioData(array_buffer);
-    });
+    let res = await fetch("/audio/click.wav");
+    const click_arr_buffer = await res.arrayBuffer();
+    click_sfx = await audio.decodeAudioData(click_arr_buffer);
+    res = await fetch("/audio/win.mp3");
+    const win_arr_buffer = await res.arrayBuffer();
+    win_sfx = await audio.decodeAudioData(win_arr_buffer);
+    res = await fetch("/audio/party-balloon-pop.mp3");
+    const balloon_pop_arr_buffer = await res.arrayBuffer();
+    balloon_pop_sfx = await audio.decodeAudioData(balloon_pop_arr_buffer);
 }
 
 function playClick() {
@@ -52,7 +49,7 @@ function playWinSound() {
 
     // G A I N
     const gain = audio.createGain();
-    gain.gain.value = 1;
+    gain.gain.value = 0.75;
 
     // Play
     audio_source
@@ -68,7 +65,7 @@ function playBalloonPopSound() {
 
     // G A I N
     const gain = audio.createGain();
-    gain.gain.value = 0.3;
+    gain.gain.value = 0.15;
 
     // Play
     audio_source

@@ -11,13 +11,20 @@
 body, button { background-color: #121213; color: #F8F8F8; }
 button { 
     border: 2px solid #F8F8F8; border-radius: 8px;  
-    width: 40%; aspect-ratio: 8 / 3;
+    aspect-ratio: 8 / 3;
     transition: border-radius 0.15s ease-in-out;
+    margin: 20px;
 }
 button:hover { 
     border: 2px solid #00B5A3; border-radius: 12px; 
     color: #00DAC4;
 }
+h6 { color: #3A3A3C; }
+h1 { font-size: xx-large; }
+h2 { font-size: large; }
+
+.bigbtn { width: 40%; }
+.smallbtn { width: 30%; }
 
 /** Center Everything */
 body { height: 100%; }
@@ -50,6 +57,7 @@ input:focus { outline: none; }
 
 /** Active */
 /* Inactive Cells Is The Default State Assumed ^ Set Above */
+.cell[data-active="0"] { background-color: #121212; }
 .cell[data-active="1"] { cursor: pointer; } /* Active Cells */
 .cell[data-active="2"] { border-radius: 0px; } /* Set Cells */
 
@@ -72,7 +80,7 @@ body {
     user-select: none;
 }
 
-h1, h2 {
+h1, h2, h6 {
     -webkit-user-select: text;
     -ms-user-select: text;
     user-select: text;
@@ -80,4 +88,5 @@ h1, h2 {
 
 /** Make Headings Use Correct Wordle Fonts */
 h1, h2, button { font-family: wordle-headings; font-weight: normal; }
-h1, h2 { text-align: center; }
+h6 { font-family: monospace }
+h1, h2, h6 { text-align: center; }

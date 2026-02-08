@@ -1,20 +1,24 @@
 const GREEN = "2";
 const YELLOW = "1";
+const GREY = "0";
 const INACTIVE = 0;
 const ACTIVE = 1;
 const SET = 2;
 
-
-
-const click = new Audio("/audio/click.wav");
-click.volume = 1;
-click.currentTime = 0;
-
 const best_guesses = new Array(6);
+const wordulator_guesses = new Array(6);
 let current_row = 0;
+let GAME_ID = genGameID(16);
+let PLAY_MODE = "AUTO";
+let total_guesses = 0;
+let answers_left = [];
 
-window.addEventListener("load", () => {
-    loadSFX();
+window.addEventListener("load", onFirstLoad);
+
+async function onFirstLoad() {
+    startNewGame();
+    document.getElementById('game-id').textContent = `GAMEID: ${GAME_ID}`
+    await loadSFX();
     document.querySelectorAll('.cell').forEach((cell, _index) => {
         cell.addEventListener("mousedown", e => {
             e.preventDefault(); // stops focus from clicking on cells
@@ -35,13 +39,9 @@ window.addEventListener("load", () => {
 
         cells.forEach((cell, index) => {
             cell.addEventListener('input', () => {
-                // Pop Animation
-                cell.classList.add("cell-pop");
-                setTimeout(() => { cell.classList.remove("cell-pop") }, 200)
-
-                // Click Noise
-                playClick();
-                
+                cell.classList.add("cell-pop"); // Pop Animation
+                playClick(); // Click Sound
+                setTimeout(() => { cell.classList.remove("cell-pop") }, 200) // Animation Cleanup
                 // move focus to next cell if exists
                 if (cell.value.length === 1 && index < cells.length - 1) {
                     cells[index + 1].focus();
@@ -63,8 +63,16 @@ window.addEventListener("load", () => {
         }
     });
 
-    setInterval(getCurrentGuess, 1000);
-});
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowUp') {
+            changeRowState(1);
+        } else if (e.key === 'ArrowDown') {
+            changeRowState(-1);
+        }
+    });
+
+    if (PLAY_MODE === "AUTO") getCurrentGuess();
+}
 
 function getRowFeedback(rowIndex) {
     let greens = 0;
@@ -97,9 +105,8 @@ function getRowFeedback(rowIndex) {
 
 function sendRowFeedback() {
     const { is_solved, data } = getRowFeedback(current_row);
-    fetch('/guess', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    fetch(`/guess/${GAME_ID}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
 
@@ -127,14 +134,123 @@ function sendRowFeedback() {
 
     // Focus On First Cell in New Row
     document.querySelectorAll('.row')[current_row].querySelectorAll('.cell')[0].focus();
+
+    setTimeout(getCurrentGuess, 800);
+}
+
+function changeMode() {
+    let button = document.getElementById('mode');
+
+    if (button.dataset.state !== "AUTO") {
+        button.textContent = "Disable Auto Mode";
+        button.dataset.state = "AUTO";
+        PLAY_MODE = "AUTO"
+        getCurrentGuess();
+    } else {
+        button.textContent = "Enable Auto Mode";
+        button.dataset.state = "MANUAL";
+        PLAY_MODE = "MANUAL"
+    }
 }
 
 async function getCurrentGuess() {
-    const res = await fetch('/current_guess');
+    const res = await fetch(`/current_guess/${GAME_ID}`)
     const data = await res.json();
     const guess = data.guess.toUpperCase();
+    total_guesses = data.guess_no;
+    answers_left.push(data.answers_left);
 
     document.getElementById('best-guess').textContent = `Current Best Guess: ${guess}`
 
+    if (PLAY_MODE === "AUTO") {
+        const guess = data.guess.toLowerCase();
+        const rows = document.querySelectorAll('.row');
+        const row = rows[current_row];
+        const cells = row.querySelectorAll('.cell');
+        for (let i = 0; i < cells.length; i++) {
+            setTimeout((cell, char) => { 
+                cell.value = char;
+                cell.classList.add("cell-pop");
+                playClick();
+                cell.focus();
+                setTimeout(() => { cell.classList.remove("cell-pop") }, 200)
+            }, 100 * i, cells[i], guess[i]);
+        }
+    }
+
     return;
+}
+
+async function changeRowState(direction) {
+    const rows = document.querySelectorAll('.row');
+    const row = rows[current_row];
+    const cells = row.querySelectorAll('.cell');
+    const current_state = parseInt(cells[0].dataset.state);
+    for (let i = 0; i < cells.length; i++) {
+        const cell = cells[i];
+        let state = parseInt(cell.dataset.state);
+        state = (current_state + direction) % 3;  // cycle 0 → 1 → 2 → 0
+        cell.dataset.state = state;
+    }
+
+    return;
+}
+
+async function startNewGame() {
+    try {
+        const res = await fetch('/start_new_game', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: GAME_ID })
+        });
+        if (!res.ok) throw "Failed To Start New Game";
+    } catch (e) {
+        console.log(`UH OH SPAGHETTIO: ${err}`);
+    }
+}
+
+
+function genGameID(N) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxzy0123456789*&';
+    let result = '!';
+
+    for (let i = 0; i < N; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        result += characters[randomIndex];
+    }
+
+    console.log(`GAME_ID: ${result}`)
+    return result;
+}
+
+function shareResult() {
+    let share_text = '!!!!GET WORDULATED!!!!\n'
+    share_text += `ONLY ${total_guesses}/6 Guesses Required`;
+    share_text += '\n\n';
+
+    share_text += '- No - Guess Breakdown - Answers Left -\n';
+    const rows = document.querySelectorAll('.row');
+    for (let i = 0; i < total_guesses; i++) {
+        share_text += `  #${i} :  `
+        const row = rows[i];
+        const cells = row.querySelectorAll('.cell');
+        for (let j = 0; j < 5; j++) {
+            const cell = cells[j];
+            switch (cell.dataset.state) {
+                case GREEN:  share_text += '🟩'; break;
+                case YELLOW: share_text += '🟨'; break;
+                case GREY:   share_text += '⬛'; break;
+                default:     share_text += '🟪'; break;
+            }
+            share_text += ' ';
+        }
+        share_text += `  : ${answers_left[i]}`;
+        share_text += '\n';
+    }
+
+    share_text += '\n';
+    share_text += 'read ya later, 🟥🟥🟥🟥🟥';
+    console.log(share_text);
+    navigator.clipboard.writeText(share_text);
+    alert("results copied to clipboard");
 }

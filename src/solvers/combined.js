@@ -92,7 +92,6 @@ async function solve(opt) {
 
             
             best_guess = good_guesses[0].guess_word;
-
             overlap_bin = createOverlap(best_guess, overlap_bin);
         }
         
@@ -104,7 +103,8 @@ async function solve(opt) {
         if (possible_words.length < 50) log(`Possible Answers: ${possible_words}`);
         current_best_guess = best_guess;
 
-        let { guess, feedback } = await getFeedback(opt.type, wordle, current_best_guess);
+        if (opt.type === "web") app_events.emit(`solver.guess`, { id: opt.game_id, guess: current_best_guess, answers_left: possible_words.length });
+        let { guess, feedback } = await getFeedback(opt.type, wordle, current_best_guess, opt.game_id);
         wordle.updateConditions(guess, feedback);
 
         possible_words = possible_words.filter(word => wordle.meetsConditions(word));
@@ -119,7 +119,7 @@ async function solve(opt) {
             log("ERROR: No Correct Word Could Be Found");
             return { solved: false };
         }
-        log('\n---|---|---|---')
+        log('\n---|---|---|---');
     }
 }
 
@@ -185,51 +185,52 @@ function cull_bad_guesses(all_possible_guesses, possible_answers, wordle, overla
 
 /**
  * 
- * @param {String} type 
- * @param {Wordle} wordle 
+ * @param {String} type
+ * @param {Wordle} wordle
+ * @param {String} guess
+ * @param {String} id
  * @returns 
  */
-async function getFeedback(type, wordle, guess) {
+async function getFeedback(type, wordle, guess, id) {
     // Feedback & Conditions updating
     if (type === 'benchmark') {
         const feedback = wordle.evaluateGuess(guess);
         return { guess, feedback };
+
     } else if (type === 'user') {
         let guess = await ask("What Word Did You Guess: ");
         const green = await ask("Green Letters  - Use '.' for any blanks: ");
-        if (guess === green) return { guess, feedback: 682 };
 
+        // If Guess is Full Green Exit Early Because Answer Found
+        if (guess === green) return { guess, feedback: 682 };
         const yellow = await ask("Yellow Letters - Use '.' for any blanks: ");
         
-        
-        const feedback = patternFromUserInput(green, yellow);
-        return { guess, feedback };
+        return { 
+            guess: guess, 
+            feedback: patternFromUserInput(green, yellow) 
+        };
 
     } else if (type === 'web') {
-        const data = await once(app_events, 'web.guess');
-        const guess = data[0].guess;
-        const green = data[0].green;
-        const yellow = data[0].yellow;
+        app_events.emit('solver.waiting', id);
+        
+        const feedback_message = new Promise((resolve) => { 
+            const handler = (msg_id, data) => {
+                if (msg_id !== id) return;
 
-        if (guess === green) return { guess, feedback: 682 };
+                app_events.off('web.guess', handler);
+                resolve(data);
+            };
 
-        // console.log(`Web Guess Recieved
-        //     ${guess}
-        //     ${green}
-        //     ${yellow}
-        // `);
+            app_events.on('web.guess', handler)
+        });
 
-        const feedback = patternFromUserInput(green, yellow);
-        return { guess, feedback };
+        const feedback = await feedback_message;
+
+        return {
+            guess: feedback.guess, 
+            feedback: patternFromUserInput(feedback.green, feedback.yellow) 
+        };
     }
 }
 
-/**
- * 
- * @returns {String}
- */
-function getCurrentBestGuess() {
-    return current_best_guess;
-}
-
-module.exports = { solve, getCurrentBestGuess }
+module.exports = { solve }

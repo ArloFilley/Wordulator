@@ -29,11 +29,11 @@ async function main() {
             case 'bench'     : await benchmark(solve, num, test_data, console.log); break;
             case 'benchmark' : await benchmark(solve, num, test_data, console.log); break;                                       
             case 'user'      : await solve({ type: "user", rand: true, log: console.log }); break;
-            case 'web'       : webServer(); await solve({ type: "web", rand: false, log: () => {} }); break;
+            case 'web'       : webServer(); break;
             default: throw `Invalid Mode Selected ${type}`
         }
     
-        process.exit(0);
+        if (type !== 'web') process.exit(0);
     } catch (err) {
         console.error(err);
         process.exit(1)
