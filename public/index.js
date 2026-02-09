@@ -231,7 +231,7 @@ function shareResult() {
     share_text += '- No - Guess Breakdown - Answers Left -\n';
     const rows = document.querySelectorAll('.row');
     for (let i = 0; i < total_guesses; i++) {
-        share_text += `  #${i} :  `
+        share_text += `  #${i} : `
         const row = rows[i];
         const cells = row.querySelectorAll('.cell');
         for (let j = 0; j < 5; j++) {
@@ -242,14 +242,13 @@ function shareResult() {
                 case GREY:   share_text += '⬛'; break;
                 default:     share_text += '🟪'; break;
             }
-            share_text += ' ';
         }
-        share_text += `  : ${answers_left[i]}`;
+        share_text += `      : ${answers_left[i]}`;
         share_text += '\n';
     }
 
     share_text += '\n';
-    share_text += 'read ya later, 🟥🟥🟥🟥🟥';
+    share_text += 'read ya later';
     console.log(share_text);
     navigator.clipboard.writeText(share_text);
     alert("results copied to clipboard");
