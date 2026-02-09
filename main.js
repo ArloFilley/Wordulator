@@ -7,7 +7,8 @@ const path = require('path');
 const webServer = require(path.join(__dirname, 'src/web/routes.js'));
 
 // Internal Library Imports
-let { solve : combinedSolver } = require(path.join(__dirname, 'src/solvers/combined.js'));
+let { solve: combinedSolver } = require(path.join(__dirname, 'src/solvers/combined.js'));
+let { solve: adverseSolver } = require(path.join(__dirname, 'src/solvers/adversle.js'));
 let { randomInt } = require(path.join(__dirname, 'src/lib/lib.js'))
 const app_events = require(path.join(__dirname, 'src/lib/events.js'));
 exports.app_events = app_events;
@@ -29,6 +30,7 @@ async function main() {
             case 'bench'     : await benchmark(solve, num, test_data, console.log); break;
             case 'benchmark' : await benchmark(solve, num, test_data, console.log); break;                                       
             case 'user'      : await solve({ type: "user", rand: true, log: console.log }); break;
+            case 'adversle'  : await adverseSolver({ type: "user", rand: true, log: console.log }); break;
             case 'web'       : webServer(); break;
             default: throw `Invalid Mode Selected ${type}`
         }

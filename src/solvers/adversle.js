@@ -35,7 +35,7 @@ async function solve(opt) {
     }
 
     // Guessing and scoring
-    let possible_words = answers;
+    let possible_words = guesses;
     let word_indecies = answers.map((v, i) => guess_index.get(v));
     let overlap_bin = "";
 
@@ -49,9 +49,9 @@ async function solve(opt) {
         let best_guess = '!@??*';
 
         if (guess_no === 0) {
-            best_guess = 'dares'; // First guess is predefined based on entropy
-            overlap_bin = createOverlap('dares');
-        } else if (possible_words.length === 1) {
+            best_guess = 'upbow'; // First guess is predefined based on entropy
+            overlap_bin = createOverlap('upbow');
+        } else  if (possible_words.length === 1) {
             // Optimisation for When Only 1 Possible Guess is Left
             best_guess = possible_words[0]; 
         } else {
@@ -79,7 +79,7 @@ async function solve(opt) {
                     }
                 }
 
-                good_guesses.sort((a, b) => b.total_score - a.total_score);
+                good_guesses.sort((a, b) => b.total_score - a.total_score).reverse();
             } else {
                 for (let i = 0; i < good_guesses.length; i++) {
                     const g = good_guesses[i].guess_index;
@@ -87,7 +87,7 @@ async function solve(opt) {
                     good_guesses[i].total_score = mm_score;
                 }
 
-                good_guesses.sort((a, b) => a.total_score - b.total_score);
+                good_guesses.sort((a, b) => b.total_score - a.total_score).reverse();
             }
 
             
@@ -168,19 +168,20 @@ function cull_bad_guesses(all_possible_guesses, possible_answers, wordle, overla
         };
     }
 
-    good_guesses.sort((a, b) => b.cheap_score - a.cheap_score);
+    good_guesses.sort((a, b) => b.cheap_score - a.cheap_score).reverse();
 
-    good_guesses = good_guesses.splice(0, 100);
+    // good_guesses = good_guesses.splice(0, 100);
     if (answers_left <= 20) {
         good_guesses = good_guesses.splice(0, answers_left * 2);
         for (let i = 0; i < good_guesses.length; i++) {
             const g = good_guesses[i].guess_index;
             good_guesses[i].cheap_score += separationScore(g, answer_indecies, fbm, fbm_stride) * separation_weight;
         }
-        good_guesses.sort((a, b) => b.cheap_score - a.cheap_score);
-        good_guesses = good_guesses.splice(0, 50);
+        good_guesses.sort((a, b) => b.cheap_score - a.cheap_score).reverse();
+        // good_guesses = good_guesses.splice(0, 50);
     }
 
+    good_guesses = good_guesses.filter((g) => wordle.meetsConditions(g.guess_word));
     return good_guesses;
 }
 
