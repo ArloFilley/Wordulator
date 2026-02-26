@@ -1,6 +1,7 @@
 // NodeJS Imports
 const path = require('path');
 const { once } = require('events');
+const { randomInt } = require('../lib/lib');
 
 // Shared App State
 let current_best_guess = null;
@@ -16,6 +17,7 @@ const { Wordle, patternFromUserInput } = require(path.join(__dirname, '../lib/wo
 const app_events = require(path.join(__dirname, '../lib/events.js'));
 
 // Load Required Data
+const good_first_guesses = require(path.join(__dirname, '../../data/proc/first_guesses.json'));
 const guesses = require(path.join(__dirname, '../../data/filter/words.json'));
 const answers = require(path.join(__dirname, '../../data/filter/solutions.json'));
 const fbm = loadFeedbackMatrix(path.join(__dirname, '../../data/proc/feedback_matrix.bin'));
@@ -47,14 +49,11 @@ async function solve(opt) {
         // Strategize & Guess
         let progress =  1 - (possible_words.length / guesses.length);
         let best_guess = '!@??*';
+        let is_first_guess = guess_no === 0;
 
-        if (guess_no === 0) {
-            best_guess = 'dares'; // First guess is predefined based on entropy
-            overlap_bin = createOverlap('dares');
-        } else if (possible_words.length === 1) {
-            // Optimisation for When Only 1 Possible Guess is Left
-            best_guess = possible_words[0]; 
-        } else {
+        if (is_first_guess) best_guess = good_first_guesses[randomInt(good_first_guesses.length)]; // First guess is predefined based on entropy
+        else if (possible_words.length === 1) best_guess = possible_words[0]; // Only 1 Possible Guess = Answer Found
+        else {
             // Weights
             const entropy_weight = 80 + 80 * -progress;
 
@@ -90,10 +89,10 @@ async function solve(opt) {
                 good_guesses.sort((a, b) => a.total_score - b.total_score);
             }
 
-            
             best_guess = good_guesses[0].guess_word;
-            overlap_bin = createOverlap(best_guess, overlap_bin);
         }
+
+        overlap_bin = createOverlap(best_guess);
         
         word_numbers.push(possible_words.length);
         guess_no += 1;

@@ -161,6 +161,7 @@ async function getCurrentGuess() {
     answers_left.push(data.answers_left);
 
     document.getElementById('best-guess').textContent = `Current Best Guess: ${guess}`
+    document.getElementById('answers-left').innerHTML = `Answers Left: ${data.answers_left}`
 
     if (PLAY_MODE === "AUTO") {
         const guess = data.guess.toLowerCase();
@@ -224,32 +225,54 @@ function genGameID(N) {
 }
 
 function shareResult() {
-    let share_text = '!!!!GET WORDULATED!!!!\n'
-    share_text += `ONLY ${total_guesses}/6 Guesses Required`;
-    share_text += '\n\n';
+    const date = new Date();
+    const day = date.getDate();
+    const month = new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date);
+    const year = date.getFullYear();
 
-    share_text += '- No - Guess Breakdown - Answers Left -\n';
+    let share_text = `${month} ${day}${getOrdinalString(day)} ${year}:\n`
+    share_text += '!! - WORDULATOR RESULT - !!\n'
+    share_text += `Guesses ${total_guesses}/6\n\n`;
+
+    share_text += ': Guess Brkdwn - Ans Left :\n';
     const rows = document.querySelectorAll('.row');
     for (let i = 0; i < total_guesses; i++) {
-        share_text += `  #${i} : `
+        let line = "| "
         const row = rows[i];
         const cells = row.querySelectorAll('.cell');
         for (let j = 0; j < 5; j++) {
             const cell = cells[j];
             switch (cell.dataset.state) {
-                case GREEN:  share_text += '🟩'; break;
-                case YELLOW: share_text += '🟨'; break;
-                case GREY:   share_text += '⬛'; break;
-                default:     share_text += '🟪'; break;
+                case GREEN:  line += '🟩'; break;
+                case YELLOW: line += '🟨'; break;
+                case GREY:   line += '⬛ '; break;
+                default:     line += '🟪'; break;
             }
         }
-        share_text += `      : ${answers_left[i]}`;
-        share_text += '\n';
+        line += `  :   ${answers_left[i]}`;
+        line = line.padEnd(25);
+        line = line.replaceAll('⬛ ', '⬛');
+        line += '|';
+        if (i !== total_guesses - 1) line += '\n';
+        share_text += line;
     }
 
-    share_text += '\n';
-    share_text += 'read ya later';
     console.log(share_text);
     navigator.clipboard.writeText(share_text);
-    alert("results copied to clipboard");
+    alert("Results Copied to Clipboard");
+}
+
+/**
+ * Returns the appropriate string for an ordinal date e.g. 12 -> th, 1 -> st, etc.
+ * @param {Number} day_num 
+ * @returns {String}
+ */
+function getOrdinalString(day_num) {
+    if (day_num > 3 && day_num < 21) return "th"
+    switch (day_num % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+    }
 }
