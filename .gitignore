@@ -7,3 +7,4 @@ node_modules/*
 data/*
 bench/*
 public/fonts/*
+docs/results-screenshots

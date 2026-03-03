@@ -1,6 +1,5 @@
 // NodeJS Imports
 const path = require('path');
-const { once } = require('events');
 const { randomInt } = require('../lib/lib');
 
 // Shared App State
@@ -29,17 +28,14 @@ async function solve(opt) {
 
     // evaluation and feedback
     /** @type {Wordle} */
-    let wordle;
-    if (opt.answer !== undefined) {
-        wordle = new Wordle(true, opt.answer);
-    } else {
-        wordle = new Wordle(false);
-    }
+    let wordle = new Wordle(false);
+    if (opt.answer !== undefined) { wordle = new Wordle(true, opt.answer); } 
 
     // Guessing and scoring
     let possible_words = answers;
     let word_indecies = answers.map((v, i) => guess_index.get(v));
     let overlap_bin = "";
+    let full_guess_list_used = false;
 
     // Stats and tracking
     let guess_no = 0;
@@ -102,22 +98,40 @@ async function solve(opt) {
         if (possible_words.length < 50) log(`Possible Answers: ${possible_words}`);
         current_best_guess = best_guess;
 
-        if (opt.type === "web") app_events.emit(`solver.guess`, { id: opt.game_id, guess: current_best_guess, answers_left: possible_words.length });
-        let { guess, feedback } = await getFeedback(opt.type, wordle, current_best_guess, opt.game_id);
+        if (opt.type === "web") 
+            app_events.emit(`solver.guess`, { id: opt.game_id, guess: current_best_guess, answers_left: possible_words.length });
+        
+        let { guess, feedback } = await getFeedback(
+            opt.type, wordle, current_best_guess, opt.game_id
+        );
         wordle.updateConditions(guess, feedback);
 
         possible_words = possible_words.filter(word => wordle.meetsConditions(word));
 
-        if (guess_no > 6) {
-            log("Couldn't Solve in 6 guesses");
+        const over_guess_limit = guess_no > 6;
+        const guess_is_correct = feedback === 682;
+        const no_valid_answers = possible_words.length <= 0;
+        if (over_guess_limit) {
+            log("Error: Couldn't Solve in 6 guesses"); 
             return { solved: false };
-        } else if (feedback === 682) {
-            log(`Solved on Guess ${guess_no} => ${best_guess} | Word Numbers By Guess: ${word_numbers}`);
+        }
+        if (guess_is_correct) {
+            log(`Solved! Guess ${guess_no} => ${best_guess}`);
             return { solved: true, answer: best_guess, guesses: guess_no, word_count: word_numbers };
-        } else if (possible_words.length === 0) {
+        } 
+
+        // Exit if no possible answer can be found in the answer list
+        if (no_valid_answers && full_guess_list_used) {
             log("ERROR: No Correct Word Could Be Found");
             return { solved: false };
         }
+
+        if (no_valid_answers && !full_guess_list_used) {
+            log("Couldn't Find Answer in Answer List: Switching to Valid Guess List")
+            possible_words = guesses.filter(word => wordle.meetsConditions(word));
+            full_guess_list_used = true;
+        }
+        
         log('\n---|---|---|---');
     }
 }
