@@ -13,6 +13,10 @@ This project was built over the course of 4 days so don't expect it to be fast
 or optimal. It was however an interesting dive into entropy, bitwise optimisation, 
 and implementing the Wordle ruleset!
 
+## Wordulator in Action (Screenshots)
+![](./docs/Example%20Game.png)
+![](./docs/March%2014th%202026%20NYT%20Wordle%20(Example)%20Result.png)
+
 ## Installation
 - Run `npm install -g wordulator` - and wait to finish
   - Installs base Wordle solutions and guesses
