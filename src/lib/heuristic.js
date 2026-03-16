@@ -86,19 +86,17 @@ function overlapScore(guess, usedLetters) {
 /**
  * 
  * @param {string} guess 
- * @param {Array<boolean>} [usedLetters]
- * @return {string}
+ * @param {Array<boolean>} [used_letters]
+ * @return {Array<boolean>}
  */
-function createOverlap(guess, usedLetters) {
-    let uL = usedLetters;
-    if (usedLetters === undefined) uL = Array.from({ length: 26 }).fill(false);
-
-    for (let l=0; l<guess.length; l++) {
-        const letter_idx = guess.charCodeAt(l) - 97;
-        uL[letter_idx] = true;
+function createOverlap(guess, used_letters) {
+    const ul = used_letters 
+        ? [...used_letters]
+        : Array(26).fill(false);
+    for (let l = 0; l < guess.length; l++) {
+        ul[guess.charCodeAt(l) - 97] = true;
     }
-
-    return uL
+    return ul;
 }
 
 module.exports = { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore, overlapScore, createOverlap }

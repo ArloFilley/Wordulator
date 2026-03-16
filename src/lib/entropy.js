@@ -173,6 +173,8 @@ module.exports = {
     encodePattern, 
     entropyFeedback,
     genEntropyTable,
-    separationScore, patternDiversityScore, minmaxScore,
+    separationScore, 
+    patternDiversityScore, 
+    minmaxScore,
     loadFeedbackMatrix 
 };

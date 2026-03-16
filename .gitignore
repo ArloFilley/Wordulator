@@ -8,3 +8,5 @@ data/*
 bench/*
 public/fonts/*
 docs/results
+
+src/solvers/combined-deprecated.js
