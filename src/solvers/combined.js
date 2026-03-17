@@ -60,7 +60,7 @@ function create() {
 /**
  * 
  * @param {State} state
- * @returns {String}
+ * @returns {State} next_state
  */
 function advance(state) {
     let next_state = {...state}
@@ -74,6 +74,22 @@ function advance(state) {
         next_state.computed_guess = computeGuess(next_state);
     
     return next_state
+}
+
+/**
+ * 
+ * @param {State} state
+ * @param {String} guess 
+ * @param {Number} feedback 
+ * @returns {State} next_state
+ */
+function advanceEasy(state, guess, feedback) {
+    let next_state = {
+        ...state,
+        guess,
+        feedback
+    }
+    return advance(next_state)
 }
 
 /**
@@ -177,4 +193,4 @@ function minmaxScorer(guesses, answers, _progress = null, stride) {
     return guesses
 }
 
-module.exports = { solve, create, advance }
+module.exports = { create, advance, advanceEasy }
