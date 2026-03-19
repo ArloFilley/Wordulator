@@ -91,7 +91,7 @@ and implementing the Wordle ruleset!
 2. Visit [localhost:3000](http://localhost:3000) in the browser
 
 #### In Action
-<img src="docs/assets/March 14th 2026 NYT Wordle (Example) Result.png" alt="Example website useage" width="700"align="center/>
+<img src="docs/assets/March 14th 2026 NYT Wordle (Example) Result.png" alt="Example website useage" width="700" align="center"/>
 
 ### Run in CLI Mode
 ```sh
@@ -99,7 +99,7 @@ node .
 ```
 
 #### In Action
-<img src="docs/assets/Example Usage.png" alt="Example user usage" width="700"align="center/>
+<img src="docs/assets/Example Usage.png" alt="Example user usage" width="700" align="center"/>
 
 
 ## License
