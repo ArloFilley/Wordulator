@@ -8,6 +8,7 @@
 #### Table of Contents
 - [About The Project](#about-the-project)
   - [Limitations](#limitations)
+- [How it Works](#how-it-works)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [NPM Package Installation](#npm-package-installation)
@@ -45,6 +46,9 @@ and implementing the Wordle ruleset!
 * Feedback matrix consumes significant disk and memory space
 * Limited to 5-letter Wordle variants
 * Assumes only ASCII characters a-z in wordlist
+
+## How it Works
+Interested in the technical details behind this project? Check out [how-it-works.md](docs/how-it-works.md)
 
 ## Getting Started
 ### Prerequisites
