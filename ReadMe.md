@@ -1,8 +1,27 @@
-# WORDULATOR
-## An Automated Entropy Based Wordle Guessing Bot
+<div align="center">
+  <h3>🤖 Wordulator</h3>
+  <p>An Automated Entropy Based Wordle Guessing Bot</p>
 
-**Do you average 6 guesses at Wordle like I do?**
-**If so then this is the repository you've been looking for!**
+  <img src="docs/assets/March 14th 2026 NYT Wordle (Example) Result.png" alt="Project demo" width="700"/>
+</div>
+
+#### Table of Contents
+- [About The Project](#about-the-project)
+  - [Limitations](#limitations)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [NPM Package Installation](#npm-package-installation)
+  - [Manual Installation](#manual-installation)
+- [Usage](#usage)
+  - [Run in Web Mode](#run-in-web-mode)
+    - [In Action](#in-action)
+  - [Run in CLI Mode](#run-in-cli-mode)
+    - [In Action](#in-action-1)
+- [License](#license)
+- [Author](#author)
+- [Acknowledgments](#acknowledgments)
+
+## About The Project
 
 This is a Node.js implementation of a Wordle guessing bot. Uses entropy and several
 heuristics to average 3.514 guesses per answer with 100% accuracy! *Tested over 
@@ -13,89 +32,87 @@ This project was built over the course of 4 days so don't expect it to be fast
 or optimal. It was however an interesting dive into entropy, bitwise optimisation, 
 and implementing the Wordle ruleset!
 
-## Wordulator in Action (Screenshots)
-![](./docs/Example%20Game.png)
-![](./docs/March%2014th%202026%20NYT%20Wordle%20(Example)%20Result.png)
+**Key Features:**
+* Full Wordle ruleset implementation
+* Efficient guess culling with heuristics
+  * Positional letter frequency
+  * Previous guess overlaps
+* Capable of using most\* 5 letter word lists (\*with ascii a-z/A-Z charset)
+* Precomputed feedback matrix with memory mapped reading
+* Automated benchmarking capable of thousands of tests
 
-## Installation
-- Run `npm install -g wordulator` - and wait to finish
+### Limitations
+* Feedback matrix consumes significant disk and memory space
+* Limited to 5-letter Wordle variants
+* Assumes only ASCII characters a-z in wordlist
+
+## Getting Started
+### Prerequisites
+* [Node.js + npm](https://nodejs.org) 
+* Update npm
+  ```sh
+  npm install npm@latest -g
+  ```
+
+### NPM Package Installation
+- Run `npm install -g wordulator`
   - Installs base Wordle solutions and guesses
   - Precomputes feedback matrix - This step might take a while
   - Creates 5000 benchmark test cases from the solution list
-- All Done
 
-### Usage
-- Run in **user** mode using `wordulator`
-- Run a standard **benchmark** using `wordulator bench (# of tests)`
-- Enjoy
+### Manual Installation
+1. Clone [This Repo](https://github.com/ArloFilley/Wordulator)
+    ```sh
+    git clone https://github.com/ArloFilley/Wordulator
+    ```
+2. Navigate to repo folder
+    ```sh
+    cd Wordulator
+    ```
+3. Create Data Folder
+    ```sh
+    mkdir data
+    ```
+4. Install library packages
+    ```sh
+    npm i
+    ```
+5. Run `scripts/postinstall.js`
+    ```sh
+    node ./scripts/postinstall.js
+    ```
 
-### Example Usage
-![](./docs/Example%20Usage.png)
+## Usage
+### Run in Web Mode
+1. Lanuch the web server and solvers
+    ```sh
+    node . web
+    ```
+2. Visit [localhost:3000](http://localhost:3000) in the browser
 
-### Example Benchmark
-![](./docs/Example%20Benchmark.png)
+#### In Action
+<img src="docs/assets/March 14th 2026 NYT Wordle (Example) Result.png" alt="Example website useage" width="700"align="center/>
 
-## Features
-- Implements full Wordle ruleset - with automated feedback for efficient benchmarking
-- Entropy guess scoring with several adjusting heuristics including
-  - Positional letter frequencies
-  - Non-overlapping letters
-  - Guess being a possible remaining answer
-- Capable of using most\* 5 letter word lists (\*with A-Z charset)
-- Precomputation of feedback matrix
-- Memory mapping of feedback matrix allowing parallel program execution
-- Automated benchmarking for running up to thousands of tests
-  
-## Known Issues
-- Feedback matrix consumes significant disk and memory space
-- Limited to 5-letter Wordle variants
-- Missing many possible runtime performance optimisations
-- Assumes only ASCII characters a-z in wordlist
+### Run in CLI Mode
+```sh
+node .
+```
 
-## Ideas for Future Improvement
-- Weighting heuristics scores based on possible words left
-- Precomputed second guesses
-- Massive Performance optimisations
-- User-friendly web interface
-- Rewrite in rust?
+#### In Action
+<img src="docs/assets/Example Usage.png" alt="Example user usage" width="700"align="center/>
 
-# How it Works
-## Feedback Modeling
-This program models Wordle feedback per letter as green, yellow or grey and encodes 
-that into an 8 bit integer, using ~2 bits per letter position. Because Wordle has 
-5 positions which each have 3 possibilities this means there are 243 possible feedbacks. 
-Each guess and answer pair is mapped into a deterministic feedback pattern represented 
-by the feedback matrix. The feedback matrix is precomputed before running the problem 
-as it significantly speeds up runtime performance at the cost of greater disk and 
-memory usage. The matrix allows simulating potential outcomes from each guess-answer 
-pair to model expected information gain
 
-## Scoring
-Each possible guess in the total word list is evaluate based on its entropy. This
-entropy in turn is based on simulating how the remaining possible answers would
-be partitioned be a given feedback. Guesses with higher entropy eliminate more potential
-answers than guesses with lower entropy\* (\*In the vast majority of cases). Each
-score is then adjusted based on the positional frequency of each letter in the guess
-based on the positional frequencies of remaining possible answers. The score is
-also adjusted based on whether letters in the guess have already been seen before
-in a previous guess. And finally the score is higher for guesses that are also contained
-in the possible answer set. These heuristics are great for picking more optimal
-guesses that still have high entropy.
+## License
 
-## Solving
-To solve a given Wordle problem, the program:
-  1. Makes a first predetermined guess (currently 'dares')
-  2. Receives user or simulated feedback
-  3. Create conditions the solution must fulfil
-  4. Filters possible answers based on currently known solution conditions
-  5. Makes another guess
+Distributed under the MIT License. See [`LICENSE.txt`](/License.txt) for more information.
 
-This loop repeats steps 2-5 until:
-- a) There is only one possible answer, the solution
-- b) The program has used up its 6 guesses
-- c) There is no possible answer that meets the solution conditions
+## Author
 
-# Credits
-Click Sound Effect - https://pixabay.com/sound-effects/film-special-effects-click-sound-432501/
-Win Sound Effect - https://pixabay.com/sound-effects/technology-correct-answer-toy-bi-bling-476370/ 
-Balloon Pop Sound Effect - https://pixabay.com/sound-effects/film-special-effects-party-balloon-pop-323588/
+**Arlo Filley** — [Contact](https://github.com/ArloFilley/ArloFilley#-contact-me)
+
+## Acknowledgments
+
+* [Choose an Open Source License](https://choosealicense.com)
+* [Click Sound Effect](https://pixabay.com/sound-effects/film-special-effects-click-sound-432501/)
+* [Win Sound Effect](https://pixabay.com/sound-effects/technology-correct-answer-toy-bi-bling-476370/) 
+* [Balloon Pop Sound Effect](https://pixabay.com/sound-effects/film-special-effects-party-balloon-pop-323588/)
