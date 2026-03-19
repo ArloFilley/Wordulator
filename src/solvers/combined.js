@@ -3,137 +3,194 @@ const path = require('path');
 
 // Lib Imports
 const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require(path.join(__dirname, '../lib/heuristic.js'));
-const { calculateGuessEntropy: entropy_score, genEntropyTable, loadFeedbackMatrix } = require(path.join(__dirname, '../lib/entropy.js'));
-const { ask, normalise } = require(path.join(__dirname, '../lib/lib.js'));
-const { Wordle, patternFromUserInput } = require(path.join(__dirname, '../lib/wordle.js'));
+const { 
+    calculateGuessEntropy: entropyScore, separationScore, patternDiversityScore, minmaxScore,
+    loadFeedbackMatrix, genEntropyTable
+} = require(path.join(__dirname, '../lib/entropy.js'));
+const { randomInt } = require(path.join(__dirname, '../lib/lib.js'));
+const { Wordle } = require(path.join(__dirname, '../lib/wordle.js'));
+const log = require(path.join(__dirname, '../lib/log.js'));
 
 // Load Required Data
-const words = require(path.join(__dirname, '../../data/filter/words.json'));
+const good_first_guesses = require(path.join(__dirname, '../../data/proc/first_guesses.json'));
+const guesses = require(path.join(__dirname, '../../data/filter/guesses.json'));
 const answers = require(path.join(__dirname, '../../data/filter/solutions.json'));
-const feedback_matrix = loadFeedbackMatrix(path.join(__dirname, '../../data/proc/feedback_matrix.bin'));
-const word_index = new Map();
-words.forEach((w, i) => word_index.set(w, i));
+const fbm = loadFeedbackMatrix(path.join(__dirname, '../../data/proc/feedback_matrix.bin'));
+const gi = new Map();
+guesses.forEach((w, i) => gi.set(w, i));
 
-async function solve(opt) {
-    let log = opt.log;
+/**
+ * @typedef {Object} Guess
+ * @property {String} word
+ * @property {Number} score
+ */
 
-    // evaluation and feedback
-    /** @type {Wordle} */
-    let wordle;
-    if (opt.answer !== undefined) {
-        wordle = new Wordle(true, opt.answer);
-    } else {
-        wordle = new Wordle(false);
-    }
+/**
+ * @typedef {Object} State
+ * @property {String} [computed_guess]
+ * @property {String} [guess]
+ * @property {Number} [feedback]
+ * @property {String[]} guesses
+ * @property {String[]} answers
+ * @property {Boolean} likely_answers
+ * @property {Array<Boolean>} [overlap]
+ * @property {Number} turn
+ * @property {Number} max_turns
+ * @property {Wordle} wordle
+ */
 
-    // Guessing and scoring
-    let possible_words = answers;
-    let pos_frequencies;
-    let previous_guess_feedback = null;
-    const scores = { entropy: new Array(words.length), pos_freq: new Array(words.length), overlap: new Array(words.length) }
-    let word_indecies = answers.map((v, i) => word_index.get(v));
-    let overlapBin = "";
 
-    // Stats and tracking
-    let guesses = 0;
-    const word_numbers = []
-
-    while (true) {
-        // Strategize & Guess
-        let progress =  1 - (words.length - possible_words.length / words.length)
-        let best_guess = '!@??*';
-        let best_score = -Infinity;
-
-        if (guesses === 0) {
-            best_guess = 'dares'; // First guess is predefined based on entropy
-            overlapBin = createOverlap('dares');
-        } else if (possible_words.length === 1) {
-            // Optimisation for When Only 1 Possible Guess is Left
-            best_guess = possible_words[0]; 
-        } else {
-            // Weights
-            const entropy_weight = 80;
-            const pos_frequency_weight = 8;
-            const possible_answer_weight = 400 * (progress ** 2);
-            const overlap_weight = 8 * -progress;
-
-            pos_frequencies = calculatePosFreq(possible_words);
-            word_indecies = word_indecies.filter(v => wordle.meetsConditions(words[v]));
-            const ent_table = genEntropyTable(possible_words.length);
-
-            for (let g = 0; g < words.length; g++) {
-                let guess = words[g];
-                scores.entropy[g] = entropy_score(g, words, feedback_matrix, word_indecies, ent_table);
-                scores.pos_freq[g] = posFreqScore(guess, pos_frequencies);
-                scores.overlap[g] = overlapScore(guess, overlapBin);
-            }
-
-            scores.pos_freq = normalise(scores.pos_freq);
-            scores.overlap = normalise(scores.overlap);
-
-            for (let guess = 0; guess < words.length; guess++) {
-                let score = 0;
-                score += (1 - Math.pow(2, -scores.entropy[guess])) * entropy_weight;
-                score += scores.pos_freq[guess] * pos_frequency_weight;
-                score += scores.overlap[guess] * overlap_weight;
-                if (wordle.meetsConditions(words[guess])) {
-                    score += 1 * possible_answer_weight;
-                }
-                if (opt.rand !== undefined && opt.rand === true) {
-                    score += 0.001 * Math.random();
-                }
-
-                if (score > best_score) {
-                    best_score = score;
-                    best_guess = words[guess];
-                }
-            }
-
-            createOverlap(best_guess, overlapBin);
-        }
-        
-        word_numbers.push(possible_words.length);
-        guesses += 1;
-
-        log(`Possible Words Left: ${possible_words.length}`);
-        log(`Best Guess ${guesses}: ${best_guess}`);
-        if (possible_words.length < 50) {
-            log(`Other Guesses ${guesses}: ${possible_words}`);
-        }
-        
-        // Feedback & Conditions updating
-        if (opt.type === 'benchmark') {
-            const feedback = wordle.evaluateGuess(best_guess);
-            previous_guess_feedback = feedback;
-            wordle.updateConditions(best_guess, feedback);
-        } else if (opt.type === 'user') {
-            best_guess   = await ask("What Word Did You Guess: ");
-            const green  = await ask("Green Letters  - Use '.' for any blanks: ");
-            const yellow = await ask("Yellow Letters - Use '.' for any blanks: ");
-            
-            const feedback = patternFromUserInput(green, yellow);
-            previous_guess_feedback = feedback;
-            wordle.updateConditions(best_guess, feedback);
-        }
-
-        possible_words = possible_words.filter((word) => { 
-            return wordle.meetsConditions(word)
-        })
-
-        if (guesses > 6) {
-            log("Couldn't Solve in 6 guesses");
-            return { solved: false };
-        } else if (previous_guess_feedback === 682) {
-            log(`Solution: ${best_guess}`);
-            log(`Guess ${guesses} - Yippeee!`);
-            log(`Word Numbers By Guess: ${word_numbers}`);
-            return { solved: true, answer: best_guess, guesses: guesses, word_count: word_numbers };
-        } else if (possible_words.length === 0) {
-            log("ERROR: No Correct Word Could Be Found");
-            return { solved: false };
-        }
-        log('\n---|---|---|---')
+/**
+ * 
+ * @returns {State}
+ */
+function create() {
+    return {
+        computed_guess: good_first_guesses[randomInt(good_first_guesses.length)],
+        guesses: guesses,
+        answers: answers,
+        likely_answers: true,
+        overlap: createOverlap(""),
+        turn: 1,
+        max_turns: 6,
+        wordle: new Wordle()
     }
 }
 
-module.exports = { solve }
+/**
+ * 
+ * @param {State} state
+ * @returns {State} next_state
+ */
+function advance(state) {
+    let next_state = {...state}
+    next_state.wordle.updateConditions(state.guess, state.feedback)
+    next_state.answers = state.answers.filter(ans => state.wordle.meetsConditions(ans))
+    next_state.turn += 1
+
+    if (next_state.answers < 20)
+        next_state.computed_guess = computeGuess(next_state, defaultCuller, minmaxScorer);
+    else
+        next_state.computed_guess = computeGuess(next_state);
+    
+    return next_state
+}
+
+/**
+ * 
+ * @param {State} state
+ * @param {String} guess 
+ * @param {Number} feedback 
+ * @returns {State} next_state
+ */
+function advanceEasy(state, guess, feedback) {
+    let next_state = {
+        ...state,
+        guess,
+        feedback
+    }
+    return advance(next_state)
+}
+
+/**
+ * 
+ * @param {State} state 
+ * @param {Function} cull 
+ * @param {Function} score 
+ * @returns 
+ */
+function computeGuess(
+    state, 
+    cull = defaultCuller, 
+    score = defaultScorer,
+) {
+    if (state.turn === 1) return good_first_guesses[randomInt(good_first_guesses.length)];
+    if (state.answers.length === 1) return state.answers[0];
+
+    let progress = 1 - (state.answers.length / guesses.length);
+
+    const guess_candidates = cull(guesses, state.answers, progress, state.overlap);
+    const scored_guesses = score(guess_candidates, state.answers, progress, guesses.length);
+    return scored_guesses
+        .sort((a, b) => b.score - a.score)[0].word;
+}
+
+/**
+ * Most guesses will not give meaningful information but take **significant computation**
+ * to score accurately. Heuristics can approximate how useful a guess is much faster
+ * returns <=200 'best' guesses to be evaluated further
+ * 
+ * @param {String[]} guesses
+ * @param {String[]} answers 
+ * @param {Number} progress 
+ * value 0-1 based on how many answers there are left of the total. 
+ * values close to 1 mean few answers are left
+ * values close to 0 represent a large number of possible answers
+ * @param {Array<Boolean>} overlap_bin
+ * 
+ * @returns { Array<Guess> }
+ */
+function defaultCuller(guesses, answers, progress, overlap_bin) {
+    const pf = calculatePosFreq(answers);
+    const ans_idxs = answers.map(ans => gi.get(ans));
+
+    let scored_guesses = guesses.map(guess => { 
+        let score = 0;
+
+        score += posFreqScore(guess, pf) 
+            * ( 25 * (1 - progress) ); // pf_weight (25 -> 0)
+        score += overlapScore(guess, overlap_bin) 
+            * ( 25 * (1 - progress) ); // overlap weight (25 -> 0)
+        score += patternDiversityScore(
+            gi.get(guess), ans_idxs, 
+            fbm, guesses.length
+        ) * ( 15 * progress ); // pattern diversity weight (0 -> 15)
+        
+        return { word: guess, score } 
+    });
+
+    return scored_guesses
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 100)
+}
+
+/**
+ * @param {Array<Guess>} guesses
+ * @param {String[]} answers  
+ * @param {Number} progress
+ * @param {Number} stride
+ * @returns {Array<Guess>}
+ */
+function defaultScorer(guesses, answers, progress, stride) {
+    const ent_table = genEntropyTable(answers.length);
+    const ans_idxs = answers.map(ans => gi.get(ans));
+
+    guesses.forEach(guess => {
+        const cheap_score = guess.score;
+        guess.score = entropyScore(gi.get(guess.word), stride, fbm, ans_idxs, ent_table)
+            * (80 * (1 - progress)); // Entropy Weight 80 -> 0
+        if (answers.length < 20) guess.score += cheap_score;
+        guess.score += 0.001 * Math.random(); // Vary guesses slightly to prevent worst cases
+    })
+
+    return guesses
+}
+
+/**
+ * @param {Array<Guess>} guesses
+ * @param {String[]} answers  
+ * @param {null} [_progress]
+ * @param {Number} stride 
+ * @returns {Array<Guess>}
+ */
+function minmaxScorer(guesses, answers, _progress = null, stride) {
+    const ans_idxs = answers.map(ans => gi.get(ans));
+
+    guesses.forEach(guess => 
+        guess.score = minmaxScore(gi.get(guess.word), stride, fbm, ans_idxs)
+    );
+
+    return guesses
+}
+
+module.exports = { create, advance, advanceEasy }

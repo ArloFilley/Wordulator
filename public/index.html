@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worduloading...</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <script src="index.js" defer></script>
+    <script src="src/audio.js" defer></script>
+    <script src="src/celebrate.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
+</head>
+<body class="center">
+    <div id="center">
+        <h1>Hello Wordulators!</h1>
+        <h2 id="best-guess">Current Best Guess: !**??</h2>
+        <h6 id="answers-left" style="margin: 5px;">Answers Left: ?????</h6>
+        <div class="center">
+            <div id="wordle-grid" class="grid">
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="1">
+                </div>
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                </div>
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                </div>
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                </div>
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                </div>
+                <div class="row">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                    <input class="cell" type="text" maxlength="1" value="" data-state="0" data-active="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="center">
+            <button id="submit-row" class="smallbtn" onclick="sendRowFeedback()">Submit Guess</button>
+            <button id="mode" class="smallbtn" onclick="changeMode()" data-state="AUTO">Disable Auto Mode</button>
+            <button id="mode" class="smallbtn" onclick="shareResult()">Share</button>
+        </div>
+        <h6 id="game-id">Game ID:</h6>
+    </div>
+</body>
+</html>

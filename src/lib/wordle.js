@@ -8,31 +8,18 @@ const BANNED = 1;
 
 class Wordle {
     /** 
-     * @param {boolean} known 
-     * @param {string} answer 
+     * @param {string} [answer]
      */
-    constructor(known, answer) {
+    constructor(answer) {
+        this.answer = answer;
+
         // Conditions
-        /** @type {Int8Array} */
         this.min_counts = new Int8Array(26);
-        /** @type {Int8Array} */
         this.max_counts = new Int8Array(26).fill(5);
-        /** 
-         * character codes of fixed positions if known | -1 stored if no letter yet fixed
-         * @type {Int8Array} 
-         */
-        this.fixed_positions = new Int8Array(5).fill(-1); 
-        /** 
-         * 
-         * @type {Int8Array} 
-         */
+        this.fixed_positions = new Int8Array(5).fill(-1); // -1 no fixed char
         this.banned_positions = new Int8Array(26 * 5); // 0 not banned, 1 banned
 
-        this.known = known;
-
-        // Answer, used for automated feedback
-        if (known) {
-            this.answer = answer;
+        if (this.answer !== undefined) {
             this.answer_letter_counts = new Int8Array(26);
             for (let i = 0; i < 5; i++) {
                 const char_code = answer.charCodeAt(i) - 97;

@@ -1,13 +1,13 @@
 const readline = require('node:readline/promises');
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+const console = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
 });
 
-async function ask(q) {
-    let a = await rl.question(q);
-    return a.toLowerCase();
+async function ask(question) {
+    let answer = await console.question(question);
+    return answer.toLowerCase();
 }
 
 /**
@@ -59,7 +59,5 @@ function randomInt(max) {
 function randomUniform(min, max) {
     return min + Math.random() * (max - min);
 }
-
-
 
 module.exports = { ask, count, normalise, patternToIndex, randomInt, randomUniform }

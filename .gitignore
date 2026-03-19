@@ -1,8 +1,10 @@
 .prittierignore
-.DS_Store
 
 package-lock.json
-node_modules/*
+/node_modules
 
-data/*
-bench/*
+/data
+/bench
+/docs/results
+/docs/old
+/public/fonts
