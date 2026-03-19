@@ -18,7 +18,7 @@
     "wordulator": "main.js"
   },
   "scripts": {
-    "test": "echo \"What the hell is a test???? YALL TESTING UR CODE??? GETTOUTAHEER!!!\" && exit 1",
+    "test": "echo \"No Tests Currently\" && exit 1",
     "install-wordulator": "chmod u+x run/install.bash && run/install.bash && chmod u+x run/benchmark.bash",
     "benchmark": "run/benchmark.bash",
     "bench": "run/benchmark.bash",
