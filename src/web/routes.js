@@ -1,19 +1,22 @@
 const path = require('path');
 
 const express = require('express');
+const { randomInt } = require('crypto');
 const app = express();
 
-const app_events = require(path.join(__dirname, '../lib/events.js'))
-const { patternFromUserInput } = require(path.join(__dirname, '../lib/wordle.js'));
-const log = require(path.join(__dirname, '../lib/log.js'));
-const { create, advance } = require(path.join(__dirname, '../solvers/combined.js'))
+const { patternFromUserInput } = require('../lib/wordle.js');
+const log = require('../lib/log.js');
+const { create, advance } = require('../solvers/combined.js');
 
-/** @type {Map<String, State>} */
+/** @typedef {String} GameID */
+/** @type {Map<GameID, State>} */
 const games = new Map();
-/** @type {Set<String>} */
-const game_ids = new Set();
 
-function webServer() {
+const PORT = Math.min(3000, randomInt(65525));
+const URL = "http://localhost"
+
+function Serve() {
+    app.listen(PORT, log.info(`Web Server Hosted -> ${URL}:${PORT}`));
     app.use(express.static('public'));
 
     app.post("/guess/:id", express.json(), (req, res) => {
@@ -47,35 +50,17 @@ function webServer() {
     });
 
     app.post('/start_new_game', express.json(), async (req, res) => {
-        const id = req.body.id;
-        
-        if (game_ids.has(id)) { 
-            log.error(`Game ${id} Already exists`); 
-            return res.status(403).send({ error: `Game ${id} Already exists` }); 
+        if (games.has(req.body.id)) {
+            let error = `Game ${id} Already exists`;
+            log.error(error);
+            return res.status(403).send({error});
         }
         
         games.set(id, create());
-        game_ids.add(id);
         log.info(`Game ${id}: Created`);
-        
-        app_events.emit(`web.start.game`, id);
-        setTimeout(() => app_events.emit(`web.stop.game`, id), 300_000);
 
         res.sendStatus(200);
     });
-
-    // Server setup
-    app.listen(3000, () => {
-        log.info(`web server running at localhost:3000`);
-    });
 }
 
-app_events.on(`solver.guess`, ({ id, guess, answers_left }) => { 
-    log.info(`Game ${id}: Solver guess - ${guess}`);
-    games.get(id).guesses.push(guess);
-    games.get(id).answers_left.push(answers_left);
-    games.get(id).guess_no += 1;
-    log.debug(`Game ${id}: Waiting for feedback`);
-})
-
-module.exports = webServer;
+module.exports = Serve;
