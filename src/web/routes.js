@@ -20,17 +20,19 @@ function Serve() {
     app.use(express.static('public'));
 
     app.post("/guess/:id", express.json(), (req, res) => {
-        const id = req.params.id;
-        const state = games.get(id);
-        if (!state) return res.sendStatus(404);
+        const { id } = req.params;
+        const { guess, green, yellow } = req.body;
+        if (!games.has(id)) return res.status(404).send({ error: `Couldn't Find Game ${id}` });
 
-        const next_state = advance({ ...state, guess: req.body.guess, feedback: patternFromUserInput(req.body.green, req.body.yellow) })
-        games.set(id, next_state);
+        games.set(
+            id, 
+            advance(games.get(id), guess, patternFromUserInput(green, yellow))
+        );
 
         res.sendStatus(200);
     });
 
-    app.get('/current_guess/:id', express.json(), (req, res) => {
+    app.get('/guess/:id', express.json(), (req, res) => {
         const id = req.params.id;
         const game = games.get(id);
 
@@ -49,12 +51,9 @@ function Serve() {
         });
     });
 
-    app.post('/start_new_game', express.json(), async (req, res) => {
-        if (games.has(req.body.id)) {
-            let error = `Game ${id} Already exists`;
-            log.error(error);
-            return res.status(403).send({error});
-        }
+    app.post('/game', express.json(), async (req, res) => {
+        const { id } = req.body;
+        if (games.has(id)) return res.status(403).send(`Game ${id} Already exists`);
         
         games.set(id, create());
         log.info(`Game ${id}: Created`);

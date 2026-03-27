@@ -154,7 +154,7 @@ function changeMode() {
 }
 
 async function getCurrentGuess() {
-    const res = await fetch(`/current_guess/${GAME_ID}`)
+    const res = await fetch(`/guess/${GAME_ID}`)
     const data = await res.json();
     const guess = data.guess.toUpperCase();
     total_guesses = data.guess_no;
@@ -199,7 +199,7 @@ async function changeRowState(direction) {
 
 async function startNewGame() {
     try {
-        const res = await fetch('/start_new_game', {
+        const res = await fetch('/game', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: GAME_ID })

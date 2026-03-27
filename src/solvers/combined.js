@@ -62,11 +62,16 @@ function create() {
  * @param {State} state
  * @returns {State} next_state
  */
-function advance(state) {
-    let next_state = {...state}
-    next_state.wordle.updateConditions(state.guess, state.feedback)
-    next_state.answers = state.answers.filter(ans => state.wordle.meetsConditions(ans))
+function advance(state, guess, feedback) {
+    let next_state = {...state, guess, feedback}
+    next_state.wordle.updateConditions(guess, feedback)
+
+    next_state.answers = state.answers.filter(ans => next_state.wordle.meetsConditions(ans))
     next_state.turn += 1
+    if (next_state.answers <= 0) {
+        next_state.answers = next_state.guesses;
+        next_state.answers = state.answers.filter(ans => next_state.wordle.meetsConditions(ans))
+    }
 
     if (next_state.answers < 20)
         next_state.computed_guess = computeGuess(next_state, defaultCuller, minmaxScorer);
@@ -74,22 +79,6 @@ function advance(state) {
         next_state.computed_guess = computeGuess(next_state);
     
     return next_state
-}
-
-/**
- * 
- * @param {State} state
- * @param {String} guess 
- * @param {Number} feedback 
- * @returns {State} next_state
- */
-function advanceEasy(state, guess, feedback) {
-    let next_state = {
-        ...state,
-        guess,
-        feedback
-    }
-    return advance(next_state)
 }
 
 /**
@@ -193,4 +182,4 @@ function minmaxScorer(guesses, answers, _progress = null, stride) {
     return guesses
 }
 
-module.exports = { create, advance, advanceEasy }
+module.exports = { create, advance }
