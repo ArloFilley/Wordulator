@@ -1,65 +1,68 @@
-const path = require('path');
+const path = require("path");
 
-const express = require('express');
-const { randomInt } = require('crypto');
+const express = require("express");
+const { randomInt } = require("crypto");
 const app = express();
 
-const { patternFromUserInput } = require('../lib/wordle.js');
-const log = require('../lib/log.js');
-const { create, advance } = require('../solvers/combined.js');
+const { patternFromUserInput } = require("../lib/wordle.js");
+const log = require("../lib/log.js");
+const { create, advance } = require("../solvers/combined.js");
 
 /** @typedef {String} GameID */
 /** @type {Map<GameID, State>} */
 const games = new Map();
 
-const PORT = Math.min(3000, randomInt(65525));
-const URL = "http://localhost"
+const PORT = Math.max(3000, randomInt(65525));
+const URL = "http://localhost";
 
 function Serve() {
-    app.listen(PORT, log.info(`Web Server Hosted -> ${URL}:${PORT}`));
-    app.use(express.static('public'));
+  app.listen(PORT, log.info(`Web Server Hosted -> ${URL}:${PORT}`));
+  app.use(express.static("public"));
 
-    app.post("/guess/:id", express.json(), (req, res) => {
-        const { id } = req.params;
-        const { guess, green, yellow } = req.body;
-        if (!games.has(id)) return res.status(404).send({ error: `Couldn't Find Game ${id}` });
+  app.post("/guess/:id", express.json(), (req, res) => {
+    const { id } = req.params;
+    const { guess, green, yellow } = req.body;
+    if (!games.has(id))
+      return res.status(404).send({ error: `Couldn't Find Game ${id}` });
 
-        games.set(
-            id, 
-            advance(games.get(id), guess, patternFromUserInput(green, yellow))
-        );
+    games.set(
+      id,
+      advance(games.get(id), guess, patternFromUserInput(green, yellow)),
+    );
 
-        res.sendStatus(200);
+    res.sendStatus(200);
+  });
+
+  app.get("/guess/:id", express.json(), (req, res) => {
+    const id = req.params.id;
+    const game = games.get(id);
+
+    if (games.get(id) === undefined)
+      return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
+
+    if (game.guesses === undefined)
+      return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
+
+    if (game.computed_guess === undefined)
+      return res.status(404).send({ error: `No Guesses Yet For ${id}` });
+
+    res.send({
+      guess: game.computed_guess,
+      answers_left: game.answers.length,
+      guess_no: game.turn,
     });
+  });
 
-    app.get('/guess/:id', express.json(), (req, res) => {
-        const id = req.params.id;
-        const game = games.get(id);
+  app.post("/game", express.json(), async (req, res) => {
+    const { id } = req.body;
+    if (games.has(id)) return res.status(403).send(`Game ${id} Already exists`);
 
-        if (games.get(id) === undefined) 
-            return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` })
-        
-        if (game.guesses === undefined) 
-            return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` })
+    games.set(id, create());
+    log.info(`Game ${id}: Created`);
 
-        if (game.computed_guess === undefined) return res.status(404).send({ error: `No Guesses Yet For ${id}` });
-
-        res.send({ 
-            guess: game.computed_guess, 
-            answers_left: game.answers.length, 
-            guess_no: game.turn
-        });
-    });
-
-    app.post('/game', express.json(), async (req, res) => {
-        const { id } = req.body;
-        if (games.has(id)) return res.status(403).send(`Game ${id} Already exists`);
-        
-        games.set(id, create());
-        log.info(`Game ${id}: Created`);
-
-        res.sendStatus(200);
-    });
+    res.sendStatus(200);
+  });
 }
 
 module.exports = Serve;
+
