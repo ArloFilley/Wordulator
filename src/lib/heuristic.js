@@ -1,102 +1,107 @@
-const { normalise } = require('./lib.js')
+const { normalise } = require("./lib.js");
 
 /**
  * Calculates the positional frequencies of letters based on a list of words
- * @param {Array<string>} words 
- * @returns 
+ * @param {Array<string>} words
+ * @returns
  */
 function calculatePosFreq(words) {
-    const pf = Array.from({length: 5}, () => new Array(26).fill(0));
+  const pf = Array.from({ length: 5 }, () => new Array(26).fill(0));
 
-    for (let i=0; i < words.length; i++) {
-        const word = words[i];
-        for (let j=0; j < 5; j++) {
-            const char_code = word.charCodeAt(j) - 97;
-            pf[j][char_code] += 1;
-        }
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    for (let j = 0; j < 5; j++) {
+      const char_code = word.charCodeAt(j) - 97;
+      pf[j][char_code] += 1;
     }
+  }
 
-    for (let i=0; i < 5; i++) {
-        pf[i] = normalise(pf[i]);
-    }
+  for (let i = 0; i < 5; i++) {
+    pf[i] = normalise(pf[i]);
+  }
 
-    return pf;
+  return pf;
 }
 
 /**
  * Scores a word based on positional frequencies of letters
- * @param {string} word 
- * @param {Array<Array<number>>} pf 
+ * @param {string} word
+ * @param {Array<Array<number>>} pf
  * @returns {number}
-*/
+ */
 function pfHeuristicScore(word, pf) {
-    let score = 0;
-    const seen = new Array(26);
-    const wl = word.length;
+  let score = 0;
+  const seen = new Array(26);
+  const wl = word.length;
 
-    for (let i=0; i < wl; i++) {
-        let char_code = word.charCodeAt(i) - 97;
-        if (seen[char_code] === 0) {
-            score += pf[i][char_code];
-            seen[char_code] = 1;
-        } else {
-            const s = pf[i][char_code];
-            score += s / 2;
-        }
+  for (let i = 0; i < wl; i++) {
+    let char_code = word.charCodeAt(i) - 97;
+    if (seen[char_code] === 0) {
+      score += pf[i][char_code];
+      seen[char_code] = 1;
+    } else {
+      const s = pf[i][char_code];
+      score += s / 2;
     }
+  }
 
-    return score;
+  return score;
 }
 
 /**
  * Scores a word between 1-word.length based on how many unique letters it contains
- * @param {string} word 
+ * @param {string} word
  * @returns {number}
-*/
+ */
 function uniquenessHeuristicScore(word) {
-    let score = 0;
-    const seen = new Set();
-    for (let i=0; i<word.length; i++) {
-        let c = word[i];
-        if (!seen.has(c)) {
-            score += 1;
-        }
+  let score = 0;
+  const seen = new Set();
+  for (let i = 0; i < word.length; i++) {
+    let c = word[i];
+    if (!seen.has(c)) {
+      score += 1;
     }
-    return score;
+  }
+  return score;
 }
 
 /**
- * 
- * @param {string} guess 
+ *
+ * @param {string} guess
  * @param {Array<boolean>} usedLetters
  * @return {number}
  */
 function overlapScore(guess, usedLetters) {
-    let score = 0;
-    for (let l=0; l<guess.length; l++) {
-        const letter_idx = guess.charCodeAt(l) - 97;
-        if (usedLetters[letter_idx] === false) {
-            score++;
-        }
+  let score = 0;
+  for (let l = 0; l < guess.length; l++) {
+    const letter_idx = guess.charCodeAt(l) - 97;
+    if (usedLetters[letter_idx] === false) {
+      score++;
     }
+  }
 
-    return score
+  return score / guess.length;
 }
 
 /**
- * 
- * @param {string} guess 
+ *
+ * @param {string} guess
  * @param {Array<boolean>} [used_letters]
  * @return {Array<boolean>}
  */
 function createOverlap(guess, used_letters) {
-    const ul = used_letters 
-        ? [...used_letters]
-        : Array(26).fill(false);
-    for (let l = 0; l < guess.length; l++) {
-        ul[guess.charCodeAt(l) - 97] = true;
-    }
-    return ul;
+  const ul = used_letters ? [...used_letters] : Array(26).fill(false);
+  for (let l = 0; l < guess.length; l++) {
+    ul[guess.charCodeAt(l) - 97] = true;
+  }
+  return ul;
 }
 
-module.exports = { calculatePosFreq, pfHeuristicScore, uniquenessHeuristicScore, overlapScore, createOverlap }
+module.exports = {
+  calculatePosFreq,
+  pfHeuristicScore,
+  uniquenessHeuristicScore,
+  overlapScore,
+  createOverlap,
+};
+

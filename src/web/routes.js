@@ -6,7 +6,7 @@ const app = express();
 
 const { patternFromUserInput } = require("../lib/wordle.js");
 const log = require("../lib/log.js");
-const { create, advance } = require("../solvers/combined.js");
+const { create, advance, play } = require("../solvers/combined.js");
 
 /** @typedef {String} GameID */
 /** @type {Map<GameID, State>} */
@@ -40,16 +40,14 @@ function Serve() {
     if (games.get(id) === undefined)
       return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
 
-    if (game.guesses === undefined)
+    if (game.guesses.length === undefined)
       return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
 
-    if (game.computed_guess === undefined)
-      return res.status(404).send({ error: `No Guesses Yet For ${id}` });
-
+    const turn = play(game);
     res.send({
-      guess: game.computed_guess,
-      answers_left: game.answers.length,
-      guess_no: game.turn,
+      guess: turn.word,
+      answers_left: turn.answersLeft,
+      guess_no: game.turns[0],
     });
   });
 
@@ -65,4 +63,3 @@ function Serve() {
 }
 
 module.exports = Serve;
-

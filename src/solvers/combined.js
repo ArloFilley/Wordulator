@@ -1,185 +1,124 @@
 // NodeJS Imports
-const path = require('path');
+const path = require("path");
 
 // Lib Imports
-const { calculatePosFreq, pfHeuristicScore: posFreqScore, createOverlap, overlapScore } = require(path.join(__dirname, '../lib/heuristic.js'));
-const { 
-    calculateGuessEntropy: entropyScore, separationScore, patternDiversityScore, minmaxScore,
-    loadFeedbackMatrix, genEntropyTable
-} = require(path.join(__dirname, '../lib/entropy.js'));
-const { randomInt } = require(path.join(__dirname, '../lib/lib.js'));
-const { Wordle } = require(path.join(__dirname, '../lib/wordle.js'));
-const log = require(path.join(__dirname, '../lib/log.js'));
+const { randomInt } = require(path.join(__dirname, "../lib/lib.js"));
+const { Wordle } = require(path.join(__dirname, "../lib/wordle.js"));
+const log = require(path.join(__dirname, "../lib/log.js"));
+const { defaultCuller } = require("./cullers.js");
+const { defaultScorer, minmaxScorer, cheapScorer } = require("./scorers.js");
 
 // Load Required Data
-const good_first_guesses = require(path.join(__dirname, '../../data/proc/first_guesses.json'));
-const guesses = require(path.join(__dirname, '../../data/filter/guesses.json'));
-const answers = require(path.join(__dirname, '../../data/filter/solutions.json'));
-const fbm = loadFeedbackMatrix(path.join(__dirname, '../../data/proc/feedback_matrix.bin'));
-const gi = new Map();
-guesses.forEach((w, i) => gi.set(w, i));
+const goodFirstGuesses = require(
+  path.join(__dirname, "../../data/proc/first_guesses.json"),
+);
+const valid_guesses = require(
+  path.join(__dirname, "../../data/filter/guesses.json"),
+);
+const likely_answers = require(
+  path.join(__dirname, "../../data/filter/solutions.json"),
+);
 
 /**
  * @typedef {Object} Guess
  * @property {String} word
- * @property {Number} score
+ * @property {Number} feedback
  */
 
 /**
- * @typedef {Object} State
- * @property {String} [computed_guess]
- * @property {String} [guess]
- * @property {Number} [feedback]
- * @property {String[]} guesses
- * @property {String[]} answers
- * @property {Boolean} likely_answers
- * @property {Array<Boolean>} [overlap]
- * @property {Number} turn
- * @property {Number} max_turns
- * @property {Wordle} wordle
+ * @typedef {Object} GameState
+ * @property {Guess[]} guesses
+ * @property {String[]} valid_guesses
+ * @property {String[]} likely_answers
+ * @property {[Number, Number]} turns - `[current, max]`
  */
 
-
 /**
- * 
  * @returns {State}
  */
 function create() {
-    return {
-        computed_guess: good_first_guesses[randomInt(good_first_guesses.length)],
-        guesses: guesses,
-        answers: answers,
-        likely_answers: true,
-        overlap: createOverlap(""),
-        turn: 1,
-        max_turns: 6,
-        wordle: new Wordle()
-    }
+  return {
+    guesses: [],
+    valid_guesses,
+    likely_answers,
+    turns: [1, 6],
+  };
 }
 
 /**
- * 
- * @param {State} state
- * @returns {State} next_state
+ *
+ * @param {GameState} state
+ * @returns {GameState} next_state
  */
 function advance(state, guess, feedback) {
-    let next_state = {...state, guess, feedback}
-    next_state.wordle.updateConditions(guess, feedback)
-
-    next_state.answers = state.answers.filter(ans => next_state.wordle.meetsConditions(ans))
-    next_state.turn += 1
-    if (next_state.answers <= 0) {
-        next_state.answers = next_state.guesses;
-        next_state.answers = state.answers.filter(ans => next_state.wordle.meetsConditions(ans))
-    }
-
-    if (next_state.answers < 20)
-        next_state.computed_guess = computeGuess(next_state, defaultCuller, minmaxScorer);
-    else
-        next_state.computed_guess = computeGuess(next_state);
-    
-    return next_state
+  return {
+    ...state,
+    guesses: [...state.guesses, { word: guess, feedback }],
+    turns: [state.turns[0] + 1, state.turns[1]],
+  };
 }
 
 /**
- * 
- * @param {State} state 
- * @param {Function} cull 
- * @param {Function} score 
- * @returns 
+ * @typedef BestGuess
+ * @property word
+ * @property answersLeft
  */
-function computeGuess(
-    state, 
-    cull = defaultCuller, 
-    score = defaultScorer,
-) {
-    if (state.turn === 1) return good_first_guesses[randomInt(good_first_guesses.length)];
-    if (state.answers.length === 1) return state.answers[0];
-
-    let progress = 1 - (state.answers.length / guesses.length);
-
-    const guess_candidates = cull(guesses, state.answers, progress, state.overlap);
-    const scored_guesses = score(guess_candidates, state.answers, progress, guesses.length);
-    return scored_guesses
-        .sort((a, b) => b.score - a.score)[0].word;
-}
 
 /**
- * Most guesses will not give meaningful information but take **significant computation**
- * to score accurately. Heuristics can approximate how useful a guess is much faster
- * returns <=200 'best' guesses to be evaluated further
- * 
- * @param {String[]} guesses
- * @param {String[]} answers 
- * @param {Number} progress 
- * value 0-1 based on how many answers there are left of the total. 
- * values close to 1 mean few answers are left
- * values close to 0 represent a large number of possible answers
- * @param {Array<Boolean>} overlap_bin
- * 
- * @returns { Array<Guess> }
+ * # Parameters
+ * @param {State} state
+ * @param {Function} cull
+ * @param {Function} score
+ *
+ * # Returns
+ *
+ * @returns {BestGuess} bestGuess
  */
-function defaultCuller(guesses, answers, progress, overlap_bin) {
-    const pf = calculatePosFreq(answers);
-    const ans_idxs = answers.map(ans => gi.get(ans));
+function play(state) {
+  if (state.turns[0] === 1) {
+    return {
+      word: goodFirstGuesses[randomInt(20)],
+      answersLeft: state.likely_answers.length,
+    };
+  }
 
-    let scored_guesses = guesses.map(guess => { 
-        let score = 0;
+  let wordle = new Wordle();
+  for (const guess of state.guesses) {
+    wordle.updateConditions(guess.word, guess.feedback);
+  }
 
-        score += posFreqScore(guess, pf) 
-            * ( 25 * (1 - progress) ); // pf_weight (25 -> 0)
-        score += overlapScore(guess, overlap_bin) 
-            * ( 25 * (1 - progress) ); // overlap weight (25 -> 0)
-        score += patternDiversityScore(
-            gi.get(guess), ans_idxs, 
-            fbm, guesses.length
-        ) * ( 15 * progress ); // pattern diversity weight (0 -> 15)
-        
-        return { word: guess, score } 
-    });
-
-    return scored_guesses
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 100)
-}
-
-/**
- * @param {Array<Guess>} guesses
- * @param {String[]} answers  
- * @param {Number} progress
- * @param {Number} stride
- * @returns {Array<Guess>}
- */
-function defaultScorer(guesses, answers, progress, stride) {
-    const ent_table = genEntropyTable(answers.length);
-    const ans_idxs = answers.map(ans => gi.get(ans));
-
-    guesses.forEach(guess => {
-        const cheap_score = guess.score;
-        guess.score = entropyScore(gi.get(guess.word), stride, fbm, ans_idxs, ent_table)
-            * (80 * (1 - progress)); // Entropy Weight 80 -> 0
-        if (answers.length < 20) guess.score += cheap_score;
-        guess.score += 0.001 * Math.random(); // Vary guesses slightly to prevent worst cases
-    })
-
-    return guesses
-}
-
-/**
- * @param {Array<Guess>} guesses
- * @param {String[]} answers  
- * @param {null} [_progress]
- * @param {Number} stride 
- * @returns {Array<Guess>}
- */
-function minmaxScorer(guesses, answers, _progress = null, stride) {
-    const ans_idxs = answers.map(ans => gi.get(ans));
-
-    guesses.forEach(guess => 
-        guess.score = minmaxScore(gi.get(guess.word), stride, fbm, ans_idxs)
+  let answers = state.likely_answers.filter((answer) =>
+    wordle.meetsConditions(answer),
+  );
+  if (answers.length <= 0) {
+    answers = state.valid_guesses.filter((answer) =>
+      wordle.meetsConditions(answer),
     );
+  }
 
-    return guesses
+  const guesses = state.valid_guesses.map((guess) => {
+    return { word: guess, score: 0 };
+  });
+
+  let goodGuesses = cheapScorer(state, guesses, answers)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 100);
+
+  if (answers.length < 50) {
+    return {
+      word: minmaxScorer(state, goodGuesses, answers).sort(
+        (a, b) => a.score - b.score,
+      )[0].word,
+      answersLeft: answers.length,
+    };
+  } else {
+    return {
+      word: defaultScorer(state, goodGuesses, answers).sort(
+        (a, b) => a.score - b.score,
+      )[0].word,
+      answersLeft: answers.length,
+    };
+  }
 }
 
-module.exports = { create, advance }
+module.exports = { create, advance, play };
