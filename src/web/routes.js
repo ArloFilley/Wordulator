@@ -6,10 +6,10 @@ const app = express();
 
 const { patternFromUserInput } = require("../lib/wordle.js");
 const log = require("../lib/log.js");
-const { create, advance, play } = require("../solvers/combined.js");
+const { Game } = require("../solvers/combined.js");
 
 /** @typedef {String} GameID */
-/** @type {Map<GameID, State>} */
+/** @type {Map<GameID, Game>} */
 const games = new Map();
 
 const PORT = Math.max(3000, randomInt(65525));
@@ -25,10 +25,8 @@ function Serve() {
     if (!games.has(id))
       return res.status(404).send({ error: `Couldn't Find Game ${id}` });
 
-    games.set(
-      id,
-      advance(games.get(id), guess, patternFromUserInput(green, yellow)),
-    );
+    let game = games.get(id);
+    game.advance(guess, patternFromUserInput(green, yellow));
 
     res.sendStatus(200);
   });
@@ -40,14 +38,10 @@ function Serve() {
     if (games.get(id) === undefined)
       return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
 
-    if (game.guesses.length === undefined)
-      return res.status(404).send({ error: `Couldn't Find Guesses For ${id}` });
-
-    const turn = play(game);
     res.send({
-      guess: turn.word,
-      answers_left: turn.answersLeft,
-      guess_no: game.turns[0],
+      guess: game.guess.word,
+      answers_left: game.guess.answersLeft,
+      guess_no: game.currentTurn,
     });
   });
 
@@ -55,7 +49,7 @@ function Serve() {
     const { id } = req.body;
     if (games.has(id)) return res.status(403).send(`Game ${id} Already exists`);
 
-    games.set(id, create());
+    games.set(id, new Game());
     log.info(`Game ${id}: Created`);
 
     res.sendStatus(200);

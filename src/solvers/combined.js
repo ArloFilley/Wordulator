@@ -5,7 +5,6 @@ const path = require("path");
 const { randomInt } = require(path.join(__dirname, "../lib/lib.js"));
 const { Wordle } = require(path.join(__dirname, "../lib/wordle.js"));
 const log = require(path.join(__dirname, "../lib/log.js"));
-const { defaultCuller } = require("./cullers.js");
 const { defaultScorer, minmaxScorer, cheapScorer } = require("./scorers.js");
 
 // Load Required Data
@@ -19,106 +18,151 @@ const likely_answers = require(
   path.join(__dirname, "../../data/filter/solutions.json"),
 );
 
-/**
- * @typedef {Object} Guess
- * @property {String} word
- * @property {Number} feedback
- */
+class Game {
+  /**
+   * # Parameters
+   *
+   * @param {Number} maxTurns - Number of turns this game should last | Default: `6`
+   *
+   * # Returns
+   * @returns {Game} game - a new game object
+   */
+  constructor(maxTurns = 6) {
+    /**
+     * @typedef {Object} GameState
+     * @property {Guess[]} guesses
+     * @property {String[]} valid_guesses
+     * @property {String[]} likely_answers
+     * @property {Turns} turns - `[current, max]`
+     */
+    /**
+     * @typedef {Object} Turns
+     * @property {Number} current
+     * @property {Number} max
+     */
+    this.state = {
+      guesses: [],
+      valid_guesses,
+      likely_answers,
+      turns: { current: 1, max: maxTurns },
+    };
 
-/**
- * @typedef {Object} GameState
- * @property {Guess[]} guesses
- * @property {String[]} valid_guesses
- * @property {String[]} likely_answers
- * @property {[Number, Number]} turns - `[current, max]`
- */
-
-/**
- * @returns {State}
- */
-function create() {
-  return {
-    guesses: [],
-    valid_guesses,
-    likely_answers,
-    turns: [1, 6],
-  };
-}
-
-/**
- *
- * @param {GameState} state
- * @returns {GameState} next_state
- */
-function advance(state, guess, feedback) {
-  return {
-    ...state,
-    guesses: [...state.guesses, { word: guess, feedback }],
-    turns: [state.turns[0] + 1, state.turns[1]],
-  };
-}
-
-/**
- * @typedef BestGuess
- * @property word
- * @property answersLeft
- */
-
-/**
- * # Parameters
- * @param {State} state
- * @param {Function} cull
- * @param {Function} score
- *
- * # Returns
- *
- * @returns {BestGuess} bestGuess
- */
-function play(state) {
-  if (state.turns[0] === 1) {
-    return {
+    this.cache = {
+      currentTurn: 1,
       word: goodFirstGuesses[randomInt(20)],
-      answersLeft: state.likely_answers.length,
+      answersLeft: this.state.likely_answers.length,
     };
   }
 
-  let wordle = new Wordle();
-  for (const guess of state.guesses) {
-    wordle.updateConditions(guess.word, guess.feedback);
+  /**
+   * returns the current turn of this game
+   * @returns {Number} currentTurn
+   */
+  get currentTurn() {
+    return this.state.turns.current;
   }
 
-  let answers = state.likely_answers.filter((answer) =>
-    wordle.meetsConditions(answer),
-  );
-  if (answers.length <= 0) {
-    answers = state.valid_guesses.filter((answer) =>
+  /**
+   * return a copy of the current game state useful for saving a game to be
+   * played later
+   * @returns {GameState} gameState
+   */
+  // get state() {
+  //  return { ...this.state };
+  // }
+
+  /**
+   * set the current game state
+   * @parameters {GameState} gameState
+   */
+  // set state(gameState) {
+  //  this.state = gameState;
+  // }
+
+  /**
+   * Advance the game state by providing the details of a guess
+   *
+   * # Parameters
+   *
+   * @param {String} word - the guessed word
+   * @param {Number} feedback - an integer feedback pattern for the guess
+   */
+  advance(word, feedback) {
+    this.state.guesses.push({ word, feedback });
+    this.state.turns.current += 1;
+  }
+
+  /**
+   * @typedef BestGuess
+   * @property word
+   * @property answersLeft
+   */
+  /**
+   * Calculates a great guess from the current game state,
+   * providing a cached guess if one exists for the current turn
+   *
+   * @returns {BestGuess} guess
+   */
+  get guess() {
+    // If there's a cached guess for the current turn there's no reason to rescore
+    // all possible guesses. Much cheaper to just return the cached guess
+    if (this.cache.currentTurn === this.state.turns.current) {
+      return { word: this.cache.word, answersLeft: this.cache.answersLeft };
+    }
+
+    const state = { ...this.state };
+
+    // We create a new wordle object for each guess to avoid problems with managing
+    // state. Any given game state should produce the same guess. Storing a wordle
+    // object is difficult without side effects
+    let wordle = new Wordle();
+    for (const guess of state.guesses) {
+      wordle.updateConditions(guess.word, guess.feedback);
+    }
+
+    let answers = state.likely_answers.filter((answer) =>
       wordle.meetsConditions(answer),
     );
-  }
 
-  const guesses = state.valid_guesses.map((guess) => {
-    return { word: guess, score: 0 };
-  });
+    // If the likely answers haven't found the answer then it must be somewhere
+    // in the list of valid guesses
+    if (answers.length <= 0) {
+      answers = state.valid_guesses.filter((answer) =>
+        wordle.meetsConditions(answer),
+      );
+    }
 
-  let goodGuesses = cheapScorer(state, guesses, answers)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 100);
+    // This is done as `scorer()` functions expect an array of scorable guesses
+    const guesses = state.valid_guesses.map((guess) => {
+      return { word: guess, score: 0 };
+    });
 
-  if (answers.length < 50) {
-    return {
-      word: minmaxScorer(state, goodGuesses, answers).sort(
-        (a, b) => a.score - b.score,
-      )[0].word,
+    // Cull guesses by cheap heuristics to avoid scoring potentially thousands
+    // of not-so-useful guesses
+    let goodGuesses = cheapScorer(state, guesses, answers)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 100);
+
+    // Fully score guesses using an appropriate complexity scoring calculation
+    let fullyScoreGuesses;
+    if (answers.length < 50) {
+      fullyScoreGuesses = minmaxScorer(state, goodGuesses, answers);
+    } else {
+      fullyScoreGuesses = defaultScorer(state, goodGuesses, answers);
+    }
+
+    const bestGuess = fullyScoreGuesses.sort((a, b) => b.score - a.score)[0];
+
+    this.cache = {
+      word: bestGuess.word,
       answersLeft: answers.length,
+      currentTurn: state.turns.current,
     };
-  } else {
     return {
-      word: defaultScorer(state, goodGuesses, answers).sort(
-        (a, b) => a.score - b.score,
-      )[0].word,
+      word: bestGuess.word,
       answersLeft: answers.length,
     };
   }
 }
 
-module.exports = { create, advance, play };
+module.exports = { Game };
