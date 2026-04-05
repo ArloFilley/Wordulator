@@ -2,32 +2,66 @@
     font-family: wordle-letters;
     src: url(fonts/franklin-normal-700.ttf);
 }
+
 @font-face {
     font-family: wordle-headings;
     src: url(fonts/HeadingNow-Regular.ttf);
 }
 
 /** Dark Mode */
-body, button { background-color: #121213; color: #F8F8F8; }
-button { 
-    border: 2px solid #F8F8F8; border-radius: 8px;  
+body,
+button {
+    background-color: #121213;
+    color: #F8F8F8;
+}
+
+button {
+    border: 2px solid #F8F8F8;
+    border-radius: 8px;
     aspect-ratio: 8 / 3;
     transition: border-radius 0.15s ease-in-out;
-    margin: 20px;
+    margin: 10px;
+    padding-bottom: 10px;
 }
-button:hover { 
-    border: 2px solid #00B5A3; border-radius: 12px; 
+
+button:hover {
+    border: 2px solid #00B5A3;
+    border-radius: 8px;
     color: #00DAC4;
 }
-h6 { color: #3A3A3C; }
-h1 { font-size: xx-large; }
-h2 { font-size: large; }
 
-.bigbtn { width: 40%; }
-.smallbtn { width: 30%; }
+input {
+    color: #F8F8F8;
+    background-color: #121213;
+    border: 1px solid #F8F8F8;
+    border-radius: 4px;
+}
+
+h6 {
+    color: #3A3A3C;
+}
+
+h1 {
+    font-size: xx-large;
+}
+
+h2 {
+    font-size: large;
+}
+
+.bigbtn {
+    width: 40%;
+}
+
+.smallbtn {
+    width: 30%;
+}
 
 /** Center Everything */
-body { height: 100%; }
+body {
+    height: 100%;
+}
+
 .center {
     display: flex;
     justify-content: center;
@@ -35,42 +69,97 @@ body { height: 100%; }
 }
 
 /** Wordle Grid */
-#wordle-grid { margin-bottom: 20px; }
-.row { margin-bottom: 5px; } 
+#wordle-grid {
+    margin-bottom: 20px;
+}
+
+.row {
+    margin-bottom: 5px;
+}
+
 .cell {
-    margin: 0.5px; width: 60px; aspect-ratio: 1 / 1;
-    font-size: 1.75rem; color: #F8F8F8; font-family: wordle-letters;
-    text-transform: uppercase; text-align: center;
-    cursor: default; caret-color: transparent;
-    
+    margin: 0.5px;
+    width: 60px;
+    aspect-ratio: 1 / 1;
+    font-size: 1.75rem;
+    color: #F8F8F8;
+    font-family: wordle-letters;
+    text-transform: uppercase;
+    text-align: center;
+    cursor: default;
+    caret-color: transparent;
+
     background-color: #121212;
-    border: 2px solid #3A3A3A; border-radius: 4px;
+    border: 2px solid #3A3A3A;
+    border-radius: 4px;
     transition: background 0.15s ease-in-out;
     transition: border 0.15s ease-in-out;
 }
-input:focus { outline: none; }
+
+input:focus {
+    outline: none;
+}
 
 /** Wordle State Coloring*/
-.cell[data-state="0"] { background-color: #3A3A3C; border-color: #3A3A3C; } /* absent */
-.cell[data-state="1"] { background-color: #B59F3B; border-color: #B59F3B; } /* present */
-.cell[data-state="2"] { background-color: #538D4E; border-color: #538D4E; } /* correct */
+.cell[data-state="0"] {
+    background-color: #3A3A3C;
+    border-color: #3A3A3C;
+}
+
+/* absent */
+.cell[data-state="1"] {
+    background-color: #B59F3B;
+    border-color: #B59F3B;
+}
+
+/* present */
+.cell[data-state="2"] {
+    background-color: #538D4E;
+    border-color: #538D4E;
+}
+
+/* correct */
 
 /** Active */
 /* Inactive Cells Is The Default State Assumed ^ Set Above */
-.cell[data-active="0"] { background-color: #121212; }
-.cell[data-active="1"] { cursor: pointer; } /* Active Cells */
-.cell[data-active="2"] { border-radius: 0px; } /* Set Cells */
+.cell[data-active="0"] {
+    background-color: #121212;
+}
 
-.cell:focus { border-color: #F8F8F8; } /* Currently Focused Cell */
+.cell[data-active="1"] {
+    cursor: pointer;
+}
+
+/* Active Cells */
+.cell[data-active="2"] {
+    border-radius: 0px;
+}
+
+/* Set Cells */
+
+.cell:focus {
+    border-color: #F8F8F8;
+}
+
+/* Currently Focused Cell */
 
 /** Popping Animation When Letter Typed */
-@keyframes cell-pop { 
-    0% { transform: scale(1); } 
-    30% { transform: scale(1.2); } 
-    100% { transform: scale(1); } 
+@keyframes cell-pop {
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
-.cell-pop { 
-    animation: cell-pop 200ms ease-in-out 0s 1 normal both; 
+
+.cell-pop {
+    animation: cell-pop 200ms ease-in-out 0s 1 normal both;
 }
 
 /** Disallow Selecting Except Headings */
@@ -80,13 +169,33 @@ body {
     user-select: none;
 }
 
-h1, h2, h6 {
+h1,
+h2,
+h6,
+input {
     -webkit-user-select: text;
     -ms-user-select: text;
     user-select: text;
 }
 
 /** Make Headings Use Correct Wordle Fonts */
-h1, h2, button { font-family: wordle-headings; font-weight: normal; }
-h6 { font-family: monospace }
-h1, h2, h6 { text-align: center; }
+h1,
+h2,
+h6,
+button {
+    font-family: wordle-headings;
+    font-weight: normal;
+}
+
+h6,
+label,
+input {
+    font-family: monospace
+}
+
+h1,
+h2,
+h6,
+input {
+    text-align: center;
+}

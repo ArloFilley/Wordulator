@@ -55,6 +55,14 @@ class Game {
   }
 
   /**
+   * Sets the current state of the game to what is passed
+   * @param {GameState} state
+   */
+  setState(state) {
+    this.state = state;
+  }
+
+  /**
    * returns the current turn of this game
    * @returns {Number} currentTurn
    */

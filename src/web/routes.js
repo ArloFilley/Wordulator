@@ -1,4 +1,4 @@
-const path = require("path");
+const fs = require("node:fs");
 
 const express = require("express");
 const { randomInt } = require("crypto");
@@ -11,6 +11,13 @@ const { Game } = require("../solvers/combined.js");
 /** @typedef {String} GameID */
 /** @type {Map<GameID, Game>} */
 const games = new Map();
+for (const file of fs.readdirSync("data/srv")) {
+  let gameJson = fs.readFileSync(`data/srv/${file}`, { encoding: "utf8" });
+  let gameState = JSON.parse(gameJson);
+  let game = new Game();
+  game.setState(gameState);
+  games.set(file.split(".")[0], game);
+}
 
 const PORT = Math.max(3000, randomInt(65525));
 const URL = "http://localhost";
@@ -27,6 +34,11 @@ function Serve() {
 
     let game = games.get(id);
     game.advance(guess, patternFromUserInput(green, yellow));
+
+    fs.writeFile(`data/srv/${id}.json`, JSON.stringify(game.state), (err) => {
+      if (err) log.error(err);
+      else log.info(`Saved game to ${id}.json`);
+    });
 
     res.sendStatus(200);
   });

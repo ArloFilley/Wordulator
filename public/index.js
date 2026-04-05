@@ -16,263 +16,297 @@ let answers_left = [];
 window.addEventListener("load", onFirstLoad);
 
 async function onFirstLoad() {
-    startNewGame();
-    document.getElementById('game-id').textContent = `GAMEID: ${GAME_ID}`
-    await loadSFX();
-    document.querySelectorAll('.cell').forEach((cell, _index) => {
-        cell.addEventListener("mousedown", e => {
-            e.preventDefault(); // stops focus from clicking on cells
-        });
-
-        cell.addEventListener('click', () => {
-            let state = parseInt(cell.dataset.state);
-            if (parseInt(cell.dataset.active) !== ACTIVE) return;
-            state = (state + 1) % 3;  // cycle 0 → 1 → 2 → 0
-            cell.dataset.state = state;
-        });
+  startNewGame();
+  document.getElementById("game-id").value = `${GAME_ID}`;
+  await loadSFX();
+  document.getElementById("game-id").addEventListener("change", (event) => {
+    event.preventDefault();
+    GAME_ID = document.getElementById("game-id").value;
+  });
+  document.querySelectorAll(".cell").forEach((cell, _index) => {
+    cell.addEventListener("mousedown", (e) => {
+      e.preventDefault(); // stops focus from clicking on cells
     });
 
-    document.querySelectorAll('.row')[0].querySelectorAll('.cell')[0].focus();
-
-    document.querySelectorAll('.row').forEach(row => {
-        const cells = row.querySelectorAll('.cell');
-
-        cells.forEach((cell, index) => {
-            cell.addEventListener('input', () => {
-                cell.classList.add("cell-pop"); // Pop Animation
-                playClick(); // Click Sound
-                setTimeout(() => { cell.classList.remove("cell-pop") }, 200) // Animation Cleanup
-                // move focus to next cell if exists
-                if (cell.value.length === 1 && index < cells.length - 1) {
-                    cells[index + 1].focus();
-                }
-            });
-
-            // handle backspace: jump back to previous cell if empty
-            cell.addEventListener('keydown', e => {
-                if (e.key === 'Backspace' && cell.value === '' && index > 0) {
-                    cells[index - 1].focus();
-                }
-            });
-        });
+    cell.addEventListener("click", () => {
+      let state = parseInt(cell.dataset.state);
+      if (parseInt(cell.dataset.active) !== ACTIVE) return;
+      state = (state + 1) % 3; // cycle 0 → 1 → 2 → 0
+      cell.dataset.state = state;
     });
+  });
 
-    document.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            sendRowFeedback();
+  document.querySelectorAll(".row")[0].querySelectorAll(".cell")[0].focus();
+
+  document.querySelectorAll(".row").forEach((row) => {
+    const cells = row.querySelectorAll(".cell");
+
+    cells.forEach((cell, index) => {
+      cell.addEventListener("input", () => {
+        cell.classList.add("cell-pop"); // Pop Animation
+        playClick(); // Click Sound
+        setTimeout(() => {
+          cell.classList.remove("cell-pop");
+        }, 200); // Animation Cleanup
+        // move focus to next cell if exists
+        if (cell.value.length === 1 && index < cells.length - 1) {
+          cells[index + 1].focus();
         }
-    });
+      });
 
-    document.addEventListener('keydown', e => {
-        if (e.key === 'ArrowUp') {
-            changeRowState(1);
-        } else if (e.key === 'ArrowDown') {
-            changeRowState(-1);
+      // handle backspace: jump back to previous cell if empty
+      cell.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && cell.value === "" && index > 0) {
+          cells[index - 1].focus();
         }
+      });
     });
+  });
 
-    if (PLAY_MODE === "AUTO") getCurrentGuess();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      sendRowFeedback();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") {
+      changeRowState(1);
+    } else if (e.key === "ArrowDown") {
+      changeRowState(-1);
+    }
+  });
+
+  if (PLAY_MODE === "AUTO") getCurrentGuess();
 }
 
 function getRowFeedback(rowIndex) {
-    let greens = 0;
-    const rows = document.querySelectorAll('.row');
-    const row = rows[rowIndex];
-    const cells = row.querySelectorAll('.cell');
-    const data = {
-        guess: "",
-        green: "",
-        yellow: ""
+  let greens = 0;
+  const rows = document.querySelectorAll(".row");
+  const row = rows[rowIndex];
+  const cells = row.querySelectorAll(".cell");
+  const data = {
+    guess: "",
+    green: "",
+    yellow: "",
+  };
+
+  cells.forEach((cell) => {
+    data.guess += cell.value;
+    if (cell.dataset.state === GREEN) {
+      data.green += cell.value;
+      greens += 1;
+      data.yellow += ".";
+    } else if (cell.dataset.state === YELLOW) {
+      data.yellow += cell.value;
+      data.green += ".";
+    } else {
+      data.green += ".";
+      data.yellow += ".";
     }
+  });
 
-    cells.forEach(cell => {
-        data.guess += cell.value;
-        if (cell.dataset.state === GREEN) {
-            data.green += cell.value;
-            greens += 1;
-            data.yellow += '.';
-        } else if (cell.dataset.state === YELLOW) {
-            data.yellow += cell.value;
-            data.green += '.';
-        } else {
-            data.green += '.';
-            data.yellow += '.';
-        }
-    });
-
-    return { is_solved: greens === cells.length, data };
+  return { is_solved: greens === cells.length, data };
 }
 
 function sendRowFeedback() {
-    const { is_solved, data } = getRowFeedback(current_row);
-    fetch(`/guess/${GAME_ID}`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
+  const { is_solved, data } = getRowFeedback(current_row);
+  fetch(`/guess/${GAME_ID}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
-    if (is_solved) { 
-        setTimeout(customConfetti, 0); 
-        setTimeout(playWinSound, 200);
-        setTimeout(playBalloonPopSound, 10); 
-        return; 
-    }
+  if (is_solved) {
+    setTimeout(customConfetti, 0);
+    setTimeout(playWinSound, 200);
+    setTimeout(playBalloonPopSound, 10);
+    return;
+  }
 
-    const rows = document.querySelectorAll('.row');
-    
-    // Set The Row That's Been Sent
-    const set_row = rows[current_row];
-    const set_cells = set_row.querySelectorAll('.cell');
-    for (let i = 0; i < set_cells.length; i++) set_cells[i].dataset.active = SET;
+  const rows = document.querySelectorAll(".row");
 
-    // Update The Row We Care About
-    current_row += 1;
-    
-    // Set New Row To Be Active
-    const now_active_row = rows[current_row];
-    const now_active_cells = now_active_row.querySelectorAll('.cell');
-    for (let i = 0; i < now_active_cells.length; i++) now_active_cells[i].dataset.active = ACTIVE;
+  // Set The Row That's Been Sent
+  const set_row = rows[current_row];
+  const set_cells = set_row.querySelectorAll(".cell");
+  for (let i = 0; i < set_cells.length; i++) set_cells[i].dataset.active = SET;
 
-    // Focus On First Cell in New Row
-    document.querySelectorAll('.row')[current_row].querySelectorAll('.cell')[0].focus();
+  // Update The Row We Care About
+  current_row += 1;
 
-    setTimeout(getCurrentGuess, 800);
+  // Set New Row To Be Active
+  const now_active_row = rows[current_row];
+  const now_active_cells = now_active_row.querySelectorAll(".cell");
+  for (let i = 0; i < now_active_cells.length; i++)
+    now_active_cells[i].dataset.active = ACTIVE;
+
+  // Focus On First Cell in New Row
+  document
+    .querySelectorAll(".row")
+    [current_row].querySelectorAll(".cell")[0]
+    .focus();
+
+  setTimeout(getCurrentGuess, 800);
 }
 
 function changeMode() {
-    let button = document.getElementById('mode');
+  let button = document.getElementById("mode");
 
-    if (button.dataset.state !== "AUTO") {
-        button.textContent = "Disable Auto Mode";
-        button.dataset.state = "AUTO";
-        PLAY_MODE = "AUTO"
-        getCurrentGuess();
-    } else {
-        button.textContent = "Enable Auto Mode";
-        button.dataset.state = "MANUAL";
-        PLAY_MODE = "MANUAL"
-    }
+  if (button.dataset.state !== "AUTO") {
+    button.textContent = "Disable Auto Mode";
+    button.dataset.state = "AUTO";
+    PLAY_MODE = "AUTO";
+    getCurrentGuess();
+  } else {
+    button.textContent = "Enable Auto Mode";
+    button.dataset.state = "MANUAL";
+    PLAY_MODE = "MANUAL";
+  }
 }
 
 async function getCurrentGuess() {
-    const res = await fetch(`/guess/${GAME_ID}`)
-    const data = await res.json();
-    const guess = data.guess.toUpperCase();
-    total_guesses = data.guess_no;
-    answers_left.push(data.answers_left);
+  const res = await fetch(`/guess/${GAME_ID}`);
+  const data = await res.json();
+  const guess = data.guess.toUpperCase();
+  total_guesses = data.guess_no;
+  answers_left.push(data.answers_left);
 
-    document.getElementById('best-guess').textContent = `Current Best Guess: ${guess}`
-    document.getElementById('answers-left').innerHTML = `Answers Left: ${data.answers_left}`
+  document.getElementById("best-guess").textContent =
+    `Current Best Guess: ${guess}`;
+  document.getElementById("answers-left").innerHTML =
+    `Answers Left: ${data.answers_left}`;
 
-    if (PLAY_MODE === "AUTO") {
-        const guess = data.guess.toLowerCase();
-        const rows = document.querySelectorAll('.row');
-        const row = rows[current_row];
-        const cells = row.querySelectorAll('.cell');
-        for (let i = 0; i < cells.length; i++) {
-            setTimeout((cell, char) => { 
-                cell.value = char;
-                cell.classList.add("cell-pop");
-                playClick();
-                cell.focus();
-                setTimeout(() => { cell.classList.remove("cell-pop") }, 200)
-            }, 100 * i, cells[i], guess[i]);
-        }
+  if (PLAY_MODE === "AUTO") {
+    const guess = data.guess.toLowerCase();
+    const rows = document.querySelectorAll(".row");
+    const row = rows[current_row];
+    const cells = row.querySelectorAll(".cell");
+    for (let i = 0; i < cells.length; i++) {
+      setTimeout(
+        (cell, char) => {
+          cell.value = char;
+          cell.classList.add("cell-pop");
+          playClick();
+          cell.focus();
+          setTimeout(() => {
+            cell.classList.remove("cell-pop");
+          }, 200);
+        },
+        100 * i,
+        cells[i],
+        guess[i],
+      );
     }
+  }
 
-    return;
+  return;
 }
 
 async function changeRowState(direction) {
-    const rows = document.querySelectorAll('.row');
-    const row = rows[current_row];
-    const cells = row.querySelectorAll('.cell');
-    const current_state = parseInt(cells[0].dataset.state);
-    for (let i = 0; i < cells.length; i++) {
-        const cell = cells[i];
-        let state = parseInt(cell.dataset.state);
-        state = (current_state + direction) % 3;  // cycle 0 → 1 → 2 → 0
-        cell.dataset.state = state;
-    }
+  const rows = document.querySelectorAll(".row");
+  const row = rows[current_row];
+  const cells = row.querySelectorAll(".cell");
+  const current_state = parseInt(cells[0].dataset.state);
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    let state = parseInt(cell.dataset.state);
+    state = (current_state + direction) % 3; // cycle 0 → 1 → 2 → 0
+    cell.dataset.state = state;
+  }
 
-    return;
+  return;
 }
 
 async function startNewGame() {
-    try {
-        const res = await fetch('/game', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: GAME_ID })
-        });
-        if (!res.ok) throw "Failed To Start New Game";
-    } catch (e) {
-        console.log(`UH OH SPAGHETTIO: ${err}`);
-    }
+  try {
+    const res = await fetch("/game", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: GAME_ID }),
+    });
+    if (!res.ok) throw "Failed To Start New Game";
+  } catch (e) {
+    console.log(`UH OH SPAGHETTIO: ${err}`);
+  }
 }
 
-
 function genGameID(N) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxzy0123456789*&';
-    let result = '!';
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxzy0123456789*&";
+  let result = "!";
 
-    for (let i = 0; i < N; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        result += characters[randomIndex];
-    }
+  for (let i = 0; i < N; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters[randomIndex];
+  }
 
-    console.log(`GAME_ID: ${result}`)
-    return result;
+  console.log(`GAME_ID: ${result}`);
+  return result;
 }
 
 function shareResult() {
-    const date = new Date();
-    const day = date.getDate();
-    const month = new Intl.DateTimeFormat('en-GB', { month: 'short' }).format(date);
-    const year = date.getFullYear();
+  const date = new Date();
+  const day = date.getDate();
+  const month = new Intl.DateTimeFormat("en-GB", { month: "short" }).format(
+    date,
+  );
+  const year = date.getFullYear();
 
-    let share_text = `${month} ${day}${getOrdinalString(day)} ${year}:\n`
-    share_text += '!! - WORDULATOR RESULT - !!\n'
-    share_text += `Guesses ${total_guesses}/6\n\n`;
+  let share_text = `${month} ${day}${getOrdinalString(day)} ${year}:\n`;
+  share_text += "!! - WORDULATOR RESULT - !!\n";
+  share_text += `Guesses ${total_guesses}/6\n\n`;
 
-    share_text += ': Guess Brkdwn - Ans Left :\n';
-    const rows = document.querySelectorAll('.row');
-    for (let i = 0; i < total_guesses; i++) {
-        let line = "| "
-        const row = rows[i];
-        const cells = row.querySelectorAll('.cell');
-        for (let j = 0; j < 5; j++) {
-            const cell = cells[j];
-            switch (cell.dataset.state) {
-                case GREEN:  line += '🟩'; break;
-                case YELLOW: line += '🟨'; break;
-                case GREY:   line += '⬛ '; break;
-                default:     line += '🟪'; break;
-            }
-        }
-        line += `  :   ${answers_left[i]}`;
-        line = line.padEnd(25);
-        line = line.replaceAll('⬛ ', '⬛');
-        line += '|';
-        if (i !== total_guesses - 1) line += '\n';
-        share_text += line;
+  share_text += ": Guess Brkdwn - Ans Left :\n";
+  const rows = document.querySelectorAll(".row");
+  for (let i = 0; i < total_guesses; i++) {
+    let line = "| ";
+    const row = rows[i];
+    const cells = row.querySelectorAll(".cell");
+    for (let j = 0; j < 5; j++) {
+      const cell = cells[j];
+      switch (cell.dataset.state) {
+        case GREEN:
+          line += "🟩";
+          break;
+        case YELLOW:
+          line += "🟨";
+          break;
+        case GREY:
+          line += "⬛ ";
+          break;
+        default:
+          line += "🟪";
+          break;
+      }
     }
+    line += `  :   ${answers_left[i]}`;
+    line = line.padEnd(25);
+    line = line.replaceAll("⬛ ", "⬛");
+    line += "|";
+    if (i !== total_guesses - 1) line += "\n";
+    share_text += line;
+  }
 
-    console.log(share_text);
-    navigator.clipboard.writeText(share_text);
-    alert("Results Copied to Clipboard");
+  console.log(share_text);
+  navigator.clipboard.writeText(share_text);
+  alert("Results Copied to Clipboard");
 }
 
 /**
  * Returns the appropriate string for an ordinal date e.g. 12 -> th, 1 -> st, etc.
- * @param {Number} day_num 
+ * @param {Number} day_num
  * @returns {String}
  */
 function getOrdinalString(day_num) {
-    if (day_num > 3 && day_num < 21) return "th"
-    switch (day_num % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-    }
+  if (day_num > 3 && day_num < 21) return "th";
+  switch (day_num % 10) {
+    case 1:
+      return "st";
+    case 2:
+      return "nd";
+    case 3:
+      return "rd";
+    default:
+      return "th";
+  }
 }
