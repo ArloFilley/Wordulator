@@ -2,7 +2,7 @@
   <h3>Wordulator</h3>
   <p>An Automated Entropy Based Wordle Guessing Bot</p>
 
-  <img src="docs/assets/March 14th 2026 NYT Wordle (Example) Result.png" alt="Project demo" width="700"/>
+  <img src="docs/assets/Example-Game.gif" alt="Project demo"/>
 </div>
 
 #### Table of Contents
